@@ -6,14 +6,15 @@
     <title>Live Theme Park Wait Times</title>
     <style>
         :root {
-            --bg-color: #000000;
+            --bg-color: #050505;
             --card-bg: #111111;
             --text-color: #ffffff;
-            --border-radius: 12px;
+            --border-radius: 16px;
             --green: #00ff88;
             --yellow: #ffcc00;
             --red: #ff4444;
             --primary: #3aa6ff;
+            --glow-color: rgba(58, 166, 255, 0.4);
         }
 
         * {
@@ -26,87 +27,100 @@
         body {
             background-color: var(--bg-color);
             color: var(--text-color);
-            padding: 16px;
+            padding: 24px 16px;
             line-height: 1.5;
-            padding-top: 90px; /* Space for the top bar fixed dropdown */
         }
 
-        /* Fixed Top Dropdown Header */
-        header {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            background: #1a1a1a;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.6);
-            z-index: 1000;
-            border-bottom: 2px solid #333;
-            padding: 14px 16px;
+        /* --- NAVIGATION MENU MATCHING YOUR SCREENSHOT --- */
+        .nav-container {
+            max-width: 1000px;
+            margin: 0 auto 24px auto;
+            background: #0a0a0a;
+            border-bottom: 1px solid #222;
+            padding: 8px 16px;
+        }
+
+        .nav-row {
             display: flex;
-            justify-content: center;
             align-items: center;
+            padding: 6px 0;
+            gap: 12px;
+            overflow-x: auto;
+            white-space: nowrap;
         }
 
-        .select-container {
-            width: 100%;
-            max-width: 500px;
-            position: relative;
-        }
-
-        select {
-            width: 100%;
-            padding: 12px 40px 12px 16px;
-            font-size: 1rem;
+        .nav-label {
+            font-size: 0.75rem;
             font-weight: 800;
-            color: var(--text-color);
-            background-color: #2a2a2a;
-            border: 2px solid #444;
-            border-radius: 8px;
-            cursor: pointer;
-            appearance: none; 
-            -webkit-appearance: none;
+            color: #555;
             text-transform: uppercase;
-            transition: border-color 0.2s ease;
+            width: 90px;
+            flex-shrink: 0;
         }
 
-        select:focus {
-            outline: none;
-            border-color: var(--primary);
-        }
-
-        .select-container::after {
-            content: "▼";
-            font-size: 0.8rem;
+        .nav-btn {
+            background: none;
+            border: none;
             color: #888;
-            position: absolute;
-            right: 16px;
-            top: 50%;
-            transform: translateY(-50%);
-            pointer-events: none;
+            font-size: 0.85rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            cursor: pointer;
+            padding: 6px 12px;
+            border-radius: 4px;
+            transition: all 0.2s ease;
         }
 
-        /* Park Container Card */
+        .nav-btn:hover {
+            color: #fff;
+        }
+
+        .nav-btn.active {
+            color: var(--primary);
+            background: rgba(58, 166, 255, 0.1);
+            box-shadow: inset 0 -2px 0 var(--primary);
+            border-radius: 4px 4px 0 0;
+        }
+
+        /* --- PARK CONTAINER WITH BLUE GLOW HOVER MATCHING YOUR SCREENSHOT --- */
         .park-container {
             background: var(--card-bg);
-            border: 2px solid #333;
+            border: 2px solid #222;
             border-radius: var(--border-radius);
-            padding: 20px;
+            padding: 24px;
             max-width: 800px;
-            margin-left: auto;
-            margin-right: auto;
+            margin: 0 auto;
             display: flex;
             flex-direction: column;
+            box-shadow: 0 0 25px var(--glow-color); /* The signature blue glow card border */
+            transition: box-shadow 0.3s ease;
+        }
+
+        /* Dynamic header matching screenshot */
+        .park-title-header {
+            font-size: 1.6rem;
+            font-weight: 800;
+            color: #fff;
+            margin-bottom: 4px;
+        }
+
+        /* Divider line matching screenshot */
+        .park-divider {
+            height: 1px;
+            background: #2a2a2a;
+            margin-bottom: 16px;
+            width: 100%;
         }
 
         /* Relative Counter Sync Text */
         .sync-timestamp-bar {
             text-align: center;
-            font-size: 0.8rem;
+            font-size: 0.75rem;
             font-weight: bold;
-            color: #777;
+            color: #555;
             text-transform: uppercase;
             letter-spacing: 0.5px;
-            margin-bottom: 12px;
+            margin-bottom: 16px;
         }
 
         /* Live Overview Dashboard Panel */
@@ -114,8 +128,8 @@
             display: flex;
             justify-content: space-around;
             align-items: center;
-            background: #1c1c1c;
-            border: 1px solid #2a2a2a;
+            background: #161616;
+            border: 1px solid #222;
             border-radius: 8px;
             padding: 14px;
             margin-bottom: 20px;
@@ -128,8 +142,8 @@
         }
 
         .stat-box .stat-label {
-            font-size: 0.75rem;
-            color: #aaa;
+            font-size: 0.7rem;
+            color: #888;
             text-transform: uppercase;
             letter-spacing: 0.5px;
             margin-bottom: 4px;
@@ -146,26 +160,16 @@
             color: var(--primary);
         }
 
-        /* Responsive adjustments for mobile screen targets */
+        /* Mobile Layout Adjustments */
         @media (max-width: 480px) {
-            body {
-                padding: 12px;
-                padding-top: 85px;
-            }
-            .park-container {
-                padding: 14px;
-            }
             .park-stats-dashboard {
                 flex-direction: column;
                 gap: 12px;
-                padding: 12px;
-            }
-            .stat-box {
-                width: 100%;
             }
             .stat-box:first-child {
-                border-bottom: 1px solid #2a2a2a;
+                border-bottom: 1px solid #222;
                 padding-bottom: 10px;
+                width: 100%;
             }
             .stat-box .stat-value {
                 font-size: 1.2rem;
@@ -183,7 +187,7 @@
             justify-content: space-between;
             align-items: center;
             padding: 14px 0;
-            border-bottom: 1px solid #222;
+            border-bottom: 1px solid #1a1a1a;
             font-size: 1.05rem;
             font-weight: 700;
         }
@@ -194,76 +198,84 @@
 
         .ride-name {
             padding-right: 15px;
+            color: #ddd;
         }
 
         .wait-time {
             display: flex;
             align-items: center;
             white-space: nowrap;
+            font-weight: 800;
         }
+
+        .green { color: var(--green); }
+        .yellow { color: var(--yellow); }
+        .red { color: var(--red); }
+        .gray { color: #666; }
 
         /* Status Dot Foundations */
         .status-dot {
-            width: 12px;
-            height: 12px;
+            width: 10px;
+            height: 10px;
             border-radius: 50%;
             margin-right: 12px;
             display: inline-block;
-            position: relative;
         }
 
-        .dot-green { background-color: var(--green); color: var(--green); }
-        .dot-yellow { background-color: var(--yellow); color: var(--yellow); }
-        .dot-red { background-color: var(--red); color: var(--red); }
-        .dot-gray { background-color: #555555; color: #555555; }
+        .dot-green { background-color: var(--green); }
+        .dot-yellow { background-color: var(--yellow); }
+        .dot-red { background-color: var(--red); }
+        .dot-gray { background-color: #444; }
         
-        /* Interactive Pulsing Keyframe Layer - Only triggers over 45m */
+        /* Danger Pulse animation */
         .pulse-red {
             animation: pulse-danger 0.9s infinite ease-in-out;
-            box-shadow: 0 0 14px var(--red);
+            box-shadow: 0 0 12px var(--red);
         }
 
         @keyframes pulse-danger {
             0% { transform: scale(1); opacity: 1; }
-            50% { transform: scale(1.5); opacity: 0.5; box-shadow: 0 0 20px var(--red); }
+            50% { transform: scale(1.4); opacity: 0.4; }
             100% { transform: scale(1); opacity: 1; }
         }
 
         .loading {
             text-align: center;
-            padding: 30px;
-            color: #888;
+            padding: 40px;
+            color: #666;
             font-weight: bold;
-            font-size: 1.1rem;
+            font-size: 1rem;
         }
     </style>
 </head>
 <body>
 
-    <header>
-        <div class="select-container">
-            <select id="parkSelect" onchange="switchPark(this.value)">
-                <optgroup label="Disney">
-                    <option value="mk">Magic Kingdom</option>
-                    <option value="epcot">EPCOT</option>
-                    <option value="hs">Hollywood Studios</option>
-                    <option value="ak">Animal Kingdom</option>
-                </optgroup>
-                <optgroup label="Universal">
-                    <option value="usf">Universal Studios Florida</option>
-                    <option value="ioa">Islands of Adventure</option>
-                    <option value="epic">Epic Universe</option>
-                </optgroup>
-                <optgroup label="Other">
-                    <option value="seaworld">SeaWorld Orlando</option>
-                    <option value="aquatica">Aquatica Orlando</option>
-                </optgroup>
-            </select>
+    <div class="nav-container">
+        <div class="nav-row">
+            <span class="nav-label">Disney</span>
+            <button class="nav-btn active" data-park="mk" onclick="switchPark('mk', this)">Magic Kingdom</button>
+            <button class="nav-btn" data-park="epcot" onclick="switchPark('epcot', this)">EPCOT</button>
+            <button class="nav-btn" data-park="hs" onclick="switchPark('hs', this)">Hollywood</button>
+            <button class="nav-btn" data-park="ak" onclick="switchPark('ak', this)">Animal Kingdom</button>
         </div>
-    </header>
+        <div class="nav-row">
+            <span class="nav-label">Universal</span>
+            <button class="nav-btn" data-park="usf" onclick="switchPark('usf', this)">Studios</button>
+            <button class="nav-btn" data-park="ioa" onclick="switchPark('ioa', this)">Islands</button>
+            <button class="nav-btn" data-park="epic" onclick="switchPark('epic', this)">Epic Universe</button>
+        </div>
+        <div class="nav-row">
+            <span class="nav-label">Other</span>
+            <button class="nav-btn" data-park="seaworld" onclick="switchPark('seaworld', this)">SeaWorld</button>
+            <button class="nav-btn" data-park="aquatica" onclick="switchPark('aquatica', this)">Aquatica</button>
+        </div>
+    </div>
 
     <div class="park-container">
         
+        <div id="dynamicParkTitle" class="park-title-header">Magic Kingdom</div>
+        <div class="park-divider"></div>
+
         <div id="syncTimeStatus" class="sync-timestamp-bar">Connecting to stream...</div>
 
         <div class="park-stats-dashboard">
@@ -286,4 +298,200 @@
         const API_BASE = "https://api.themeparks.wiki/v1";
 
         const parkIds = {
-            'mk': '75ea578a-adc8-4
+            'mk': '75ea578a-adc8-4116-a54d-dccb60765ef9',    
+            'epcot': '47f90d2c-e191-4239-a466-5892ef59a88b', 
+            'hs': '288747d1-8b4f-4a64-867e-ea7c9b27bad8',    
+            'ak': '1c84a229-8862-4648-9c71-378ddd2c7693',     
+            'usf': 'eb3f4560-2383-4a36-9152-6b3e5ed6bc57',   
+            'ioa': '267615cc-8943-4c2a-ae2c-5da728ca591f',   
+            'epic': '12dbb85b-265f-44e6-bccf-f1faa17211fc',
+            'seaworld': '27d64dee-d85e-48dc-ad6d-8077445cd946',
+            'aquatica': '9e2867f8-68eb-454f-b367-0ed0fd72d72a'
+        };
+
+        let activeParkKey = 'mk';
+        let globalRideCache = {};
+        let globalHoursCache = {};
+        let lastFetchTimestamp = null;
+
+        // Upgraded helper to transition selection state seamlessly between navigation bar buttons
+        function switchPark(parkKey, element) {
+            activeParkKey = parkKey;
+            
+            // 1. Clear previous active styles across all buttons
+            document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
+            // 2. Inject active highlight style to currently clicked target
+            element.classList.add('active');
+
+            // 3. Update Text Header Title inside card container
+            document.getElementById('dynamicParkTitle').innerText = element.innerText;
+
+            updateDashboardDisplay(parkKey);
+            
+            if (globalRideCache[parkKey]) {
+                displayRides(globalRideCache[parkKey]);
+            } else {
+                document.getElementById('rideDisplayList').innerHTML = '<div class="loading">Loading live times...</div>';
+                fetchWaitTimes();
+            }
+        }
+
+        function formatTimeString(isoString) {
+            if (!isoString) return '';
+            try {
+                const date = new Date(isoString);
+                return date.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+            } catch (e) {
+                return '';
+            }
+        }
+
+        function updateDashboardDisplay(parkKey) {
+            const hoursEl = document.getElementById('parkHoursValue');
+            const avgWaitEl = document.getElementById('parkAvgWaitValue');
+
+            if (globalHoursCache[parkKey]) {
+                hoursEl.innerText = globalHoursCache[parkKey];
+            } else {
+                hoursEl.innerText = "Fetching...";
+                fetchParkHours(parkKey);
+            }
+
+            const rides = globalRideCache[parkKey];
+            if (rides && rides.length > 0) {
+                let operatingRides = rides.filter(r => r.status === "OPERATING" && r.queue?.STANDBY?.waitTime !== undefined);
+                if (operatingRides.length > 0) {
+                    let totalWait = operatingRides.reduce((sum, r) => sum + r.queue.STANDBY.waitTime, 0);
+                    let avg = Math.round(totalWait / operatingRides.length);
+                    avgWaitEl.innerText = `${avg} min`;
+                } else {
+                    avgWaitEl.innerText = "Closed";
+                }
+            } else {
+                avgWaitEl.innerText = "--";
+            }
+        }
+
+        function runLiveClockTracker() {
+            setInterval(() => {
+                const statusEl = document.getElementById('syncTimeStatus');
+                if (!lastFetchTimestamp) {
+                    statusEl.innerText = "Waiting for initial sync...";
+                    return;
+                }
+                const elapsedSeconds = Math.floor((Date.now() - lastFetchTimestamp) / 1000);
+                if (elapsedSeconds < 5) {
+                    statusEl.innerText = "Updated just now";
+                } else {
+                    statusEl.innerText = `Updated ${elapsedSeconds}s ago`;
+                }
+            }, 1000);
+        }
+
+        async function fetchParkHours(parkKey) {
+            const wikiId = parkIds[parkKey];
+            try {
+                const response = await fetch(`${API_BASE}/entity/${wikiId}/schedule`);
+                if (!response.ok) throw new Error();
+                const data = await response.json();
+                
+                if (data && data.schedule && data.schedule.length > 0) {
+                    const localDate = new Date();
+                    const yyyy = localDate.getFullYear();
+                    const mm = String(localDate.getMonth() + 1).padStart(2, '0');
+                    const dd = String(localDate.getDate()).padStart(2, '0');
+                    const todayStr = `${yyyy}-${mm}-${dd}`;
+                    
+                    let operationalDays = data.schedule.filter(day => day.date === todayStr && day.type === "OPERATING");
+                    
+                    if (operationalDays.length === 0) {
+                        operationalDays = data.schedule.filter(day => day.type === "OPERATING");
+                    }
+                    
+                    if (operationalDays.length > 0 && operationalDays[0].openingTime) {
+                        const target = operationalDays[0];
+                        let hoursText = `${formatTimeString(target.openingTime)} - ${formatTimeString(target.closingTime)}`;
+                        globalHoursCache[parkKey] = hoursText;
+                    } else {
+                        globalHoursCache[parkKey] = "Closed / See App";
+                    }
+                } else {
+                    globalHoursCache[parkKey] = "Closed";
+                }
+                
+                if (parkKey === activeParkKey) {
+                    document.getElementById('parkHoursValue').innerText = globalHoursCache[parkKey];
+                }
+            } catch (e) {
+                if (parkKey === activeParkKey) document.getElementById('parkHoursValue').innerText = "Unavailable";
+            }
+        }
+
+        async function fetchSingleParkTimes(localId, wikiId) {
+            try {
+                const response = await fetch(`${API_BASE}/entity/${wikiId}/live`);
+                if (!response.ok) throw new Error('API server error');
+                
+                const data = await response.json();
+                if (!data || !data.liveData) return;
+                
+                const rides = data.liveData.filter(item => item.entityType === "ATTRACTION");
+                
+                rides.sort((a, b) => {
+                    const aOpen = a.status === "OPERATING";
+                    const bOpen = b.status === "OPERATING";
+                    
+                    if (aOpen && !bOpen) return -1;
+                    if (!aOpen && bOpen) return 1;
+                    
+                    if (aOpen && bOpen) {
+                        const aWait = a.queue?.STANDBY?.waitTime ?? 0;
+                        const bWait = b.queue?.STANDBY?.waitTime ?? 0;
+                        if (bWait !== aWait) return bWait - aWait;
+                    }
+                    return a.name.localeCompare(b.name);
+                });
+
+                globalRideCache[localId] = rides;
+
+                if (localId === activeParkKey) {
+                    updateDashboardDisplay(localId);
+                    displayRides(rides);
+                }
+            } catch (error) {
+                console.error(`Error pulling times for ${localId}:`, error);
+                if (localId === activeParkKey && !globalRideCache[localId]) {
+                    document.getElementById('rideDisplayList').innerHTML = '<div class="loading">Offline or waiting for data update...</div>';
+                }
+            }
+        }
+
+        async function fetchWaitTimes() {
+            if (!globalHoursCache[activeParkKey]) {
+                fetchParkHours(activeParkKey);
+            }
+
+            const fetchPromises = Object.entries(parkIds).map(([localId, wikiId]) => 
+                fetchSingleParkTimes(localId, wikiId)
+            );
+
+            await Promise.allSettled(fetchPromises);
+            lastFetchTimestamp = Date.now();
+        }
+
+        function scheduleNextMinuteSync() {
+            const now = new Date();
+            const delayUntilNextMinute = (60 - now.getSeconds()) * 1000 - now.getMilliseconds();
+            
+            setTimeout(() => {
+                fetchWaitTimes();
+                setInterval(fetchWaitTimes, 60000);
+            }, delayUntilNextMinute);
+        }
+
+        fetchWaitTimes();
+        scheduleNextMinuteSync();
+        runLiveClockTracker();
+    </script>
+</body>
+</html>
