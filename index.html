@@ -27,60 +27,67 @@
         body {
             background-color: var(--bg-color);
             color: var(--text-color);
-            padding: 24px 16px;
+            padding: 16px;
             line-height: 1.5;
+            padding-top: 90px; /* Leave space for the fixed dropdown header */
         }
 
-        .nav-container {
-            max-width: 1000px;
-            margin: 0 auto 24px auto;
-            background: #0a0a0a;
+        /* --- FIXED DROPDOWN HEADER AREA --- */
+        header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: #121212;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.8);
+            z-index: 1000;
             border-bottom: 1px solid #222;
-            padding: 8px 16px;
-        }
-
-        .nav-row {
+            padding: 14px 16px;
             display: flex;
+            justify-content: center;
             align-items: center;
-            padding: 6px 0;
-            gap: 12px;
-            overflow-x: auto;
-            white-space: nowrap;
         }
 
-        .nav-label {
-            font-size: 0.75rem;
-            font-weight: 800;
-            color: #555;
-            text-transform: uppercase;
-            width: 90px;
-            flex-shrink: 0;
+        .select-container {
+            width: 100%;
+            max-width: 500px;
+            position: relative;
         }
 
-        .nav-btn {
-            background: none;
-            border: none;
-            color: #888;
-            font-size: 0.85rem;
+        select {
+            width: 100%;
+            padding: 12px 40px 12px 16px;
+            font-size: 1rem;
             font-weight: 800;
-            text-transform: uppercase;
+            color: var(--text-color);
+            background-color: #1a1a1a;
+            border: 2px solid #333;
+            border-radius: 8px;
             cursor: pointer;
-            padding: 6px 12px;
-            border-radius: 4px;
-            transition: all 0.2s ease;
+            appearance: none; 
+            -webkit-appearance: none;
+            text-transform: uppercase;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
         }
 
-        .nav-btn:hover {
-            color: #fff;
+        select:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 10px rgba(58, 166, 255, 0.3);
         }
 
-        .nav-btn.active {
-            color: var(--primary);
-            background: rgba(58, 166, 255, 0.1);
-            box-shadow: inset 0 -2px 0 var(--primary);
-            border-radius: 4px 4px 0 0;
+        .select-container::after {
+            content: "▼";
+            font-size: 0.8rem;
+            color: #666;
+            position: absolute;
+            right: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            pointer-events: none;
         }
 
+        /* --- PARK CONTAINER WITH SIGNATURE GLOW CARD --- */
         .park-container {
             background: var(--card-bg);
             border: 2px solid #222;
@@ -154,6 +161,9 @@
         }
 
         @media (max-width: 480px) {
+            body {
+                padding-top: 85px;
+            }
             .park-stats-dashboard {
                 flex-direction: column;
                 gap: 12px;
@@ -168,6 +178,7 @@
             }
         }
 
+        /* --- RIDE LISTS ROWS --- */
         .ride-list {
             display: flex;
             flex-direction: column;
@@ -239,26 +250,27 @@
 </head>
 <body>
 
-    <div class="nav-container">
-        <div class="nav-row">
-            <span class="nav-label">Disney</span>
-            <button class="nav-btn active" onclick="switchPark('mk', this)">Magic Kingdom</button>
-            <button class="nav-btn" onclick="switchPark('epcot', this)">EPCOT</button>
-            <button class="nav-btn" onclick="switchPark('hs', this)">Hollywood</button>
-            <button class="nav-btn" onclick="switchPark('ak', this)">Animal Kingdom</button>
+    <header>
+        <div class="select-container">
+            <select id="parkSelect" onchange="switchPark(this.value)">
+                <optgroup label="Disney">
+                    <option value="mk">Magic Kingdom</option>
+                    <option value="epcot">EPCOT</option>
+                    <option value="hs">Hollywood Studios</option>
+                    <option value="ak">Animal Kingdom</option>
+                </optgroup>
+                <optgroup label="Universal">
+                    <option value="usf">Universal Studios Florida</option>
+                    <option value="ioa">Islands of Adventure</option>
+                    <option value="epic">Epic Universe</option>
+                </optgroup>
+                <optgroup label="Other">
+                    <option value="seaworld">SeaWorld Orlando</option>
+                    <option value="aquatica">Aquatica Orlando</option>
+                </optgroup>
+            </select>
         </div>
-        <div class="nav-row">
-            <span class="nav-label">Universal</span>
-            <button class="nav-btn" onclick="switchPark('usf', this)">Studios</button>
-            <button class="nav-btn" onclick="switchPark('ioa', this)">Islands</button>
-            <button class="nav-btn" onclick="switchPark('epic', this)">Epic Universe</button>
-        </div>
-        <div class="nav-row">
-            <span class="nav-label">Other</span>
-            <button class="nav-btn" onclick="switchPark('seaworld', this)">SeaWorld</button>
-            <button class="nav-btn" onclick="switchPark('aquatica', this)">Aquatica</button>
-        </div>
-    </div>
+    </header>
 
     <div class="park-container">
         <div id="dynamicParkTitle" class="park-title-header">Magic Kingdom</div>
@@ -302,15 +314,13 @@
         let globalHoursCache = {};
         let lastFetchTimestamp = null;
 
-        function switchPark(parkKey, element) {
+        function switchPark(parkKey) {
             activeParkKey = parkKey;
             
-            document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
-            if (element) element.classList.add('active');
-
-            if (element) {
-                document.getElementById('dynamicParkTitle').innerText = element.innerText;
-            }
+            // Map selected values to clear text titles dynamically inside your card view layout
+            const selector = document.getElementById('parkSelect');
+            const selectedOption = selector.options[selector.selectedIndex];
+            document.getElementById('dynamicParkTitle').innerText = selectedOption.text;
 
             updateDashboardDisplay(parkKey);
             
