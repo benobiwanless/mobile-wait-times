@@ -98,22 +98,6 @@
             box-shadow: 0 0 25px var(--glow-color);
         }
 
-        /* --- CENTERED PARK TITLE --- */
-        .park-title-header {
-            font-size: 1.6rem;
-            font-weight: 800;
-            color: #fff;
-            margin-bottom: 4px;
-            text-align: center;
-        }
-
-        .park-divider {
-            height: 1px;
-            background: #2a2a2a;
-            margin-bottom: 16px;
-            width: 100%;
-        }
-
         .sync-timestamp-bar {
             text-align: center;
             font-size: 0.75rem;
@@ -285,9 +269,6 @@
     </header>
 
     <div class="park-container">
-        <div id="dynamicParkTitle" class="park-title-header">Magic Kingdom</div>
-        <div class="park-divider"></div>
-
         <div id="syncTimeStatus" class="sync-timestamp-bar">Connecting to stream...</div>
 
         <div class="park-stats-dashboard">
@@ -336,11 +317,6 @@
 
         function switchPark(parkKey) {
             activeParkKey = parkKey;
-            
-            const selector = document.getElementById('parkSelect');
-            if (selector && selector.options[selector.selectedIndex]) {
-                document.getElementById('dynamicParkTitle').innerText = selector.options[selector.selectedIndex].text;
-            }
 
             updateDashboardDisplay(parkKey);
             
