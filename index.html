@@ -98,6 +98,17 @@
             flex-direction: column;
         }
 
+        /* Relative Counter Sync Text */
+        .sync-timestamp-bar {
+            text-align: center;
+            font-size: 0.8rem;
+            font-weight: bold;
+            color: #777;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 12px;
+        }
+
         /* Live Overview Dashboard Panel */
         .park-stats-dashboard {
             display: flex;
@@ -128,14 +139,14 @@
             font-size: 1.1rem;
             font-weight: bold;
             color: #fff;
-            white-space: nowrap; /* Prevents text from breaking mid-word or breaking AM/PM apart */
+            white-space: nowrap;
         }
 
         .stat-box .stat-value.avg-wait-highlight {
             color: var(--primary);
         }
 
-        /* Responsive adjustments for smaller screens like iPhone */
+        /* Responsive adjustments for mobile screen targets */
         @media (max-width: 480px) {
             body {
                 padding: 12px;
@@ -145,7 +156,7 @@
                 padding: 14px;
             }
             .park-stats-dashboard {
-                flex-direction: column; /* Stack hours on top of average wait time */
+                flex-direction: column;
                 gap: 12px;
                 padding: 12px;
             }
@@ -157,7 +168,7 @@
                 padding-bottom: 10px;
             }
             .stat-box .stat-value {
-                font-size: 1.2rem; /* Make text slightly larger and easier to read when stacked */
+                font-size: 1.2rem;
             }
         }
 
@@ -253,6 +264,8 @@
 
     <div class="park-container">
         
+        <div id="syncTimeStatus" class="sync-timestamp-bar">Connecting to stream...</div>
+
         <div class="park-stats-dashboard">
             <div class="stat-box">
                 <div class="stat-label">Today's Hours</div>
@@ -285,6 +298,7 @@
         let activeParkKey = 'mk';
         let globalRideCache = {};
         let globalHoursCache = {};
+        let lastFetchTimestamp = null;
 
         function switchPark(parkKey) {
             activeParkKey = parkKey;
@@ -331,6 +345,23 @@
             } else {
                 avgWaitEl.innerText = "--";
             }
+        }
+
+        // Live ticking loop runner updating relative seconds text string
+        function runLiveClockTracker() {
+            setInterval(() => {
+                const statusEl = document.getElementById('syncTimeStatus');
+                if (!lastFetchTimestamp) {
+                    statusEl.innerText = "Waiting for initial sync...";
+                    return;
+                }
+                const elapsedSeconds = Math.floor((Date.now() - lastFetchTimestamp) / 1000);
+                if (elapsedSeconds < 5) {
+                    statusEl.innerText = "Updated just now";
+                } else {
+                    statusEl.innerText = `Updated ${elapsedSeconds}s ago`;
+                }
+            }, 1000);
         }
 
         async function fetchParkHours(parkKey) {
@@ -411,61 +442,30 @@
                     }
                 } catch (error) {
                     console.error(`Error pulling times for ${localId}:`, error);
-                    if (localId === activeParkKey && !globalRideCache[localId]) {
-                        document.getElementById('rideDisplayList').innerHTML = '<div class="loading">Offline or waiting for data update...</div>';
-                    }
                 }
             }
+            // Timestamp update lock
+            lastFetchTimestamp = Date.now();
         }
 
-        function displayRides(rides) {
-            const listContainer = document.getElementById('rideDisplayList');
-            listContainer.innerHTML = ''; 
-
-            if (!rides || rides.length === 0) {
-                listContainer.innerHTML = '<div class="loading">No active attraction times reported.</div>';
-                return;
-            }
-
-            rides.forEach(ride => {
-                const isOpen = ride.status === "OPERATING";
-                const wait = ride.queue?.STANDBY?.waitTime ?? 0;
-                
-                let dotColor = 'dot-green';
-                let pulseClass = '';
-                let textColor = 'green';
-                
-                if (!isOpen) {
-                    dotColor = 'dot-gray';
-                    textColor = 'gray';
-                } else if (wait >= 31) {
-                    dotColor = 'dot-red';
-                    textColor = 'red';
-                    if (wait >= 45) {
-                        pulseClass = 'pulse-red';
-                    }
-                } else if (wait >= 16) {
-                    dotColor = 'dot-yellow';
-                    textColor = 'yellow';
-                }
-
-                const displayWait = isOpen ? `${wait}m` : 'Closed';
-
-                const row = document.createElement('div');
-                row.className = 'ride-row';
-                row.innerHTML = `
-                    <span class="ride-name">${ride.name}</span>
-                    <span class="wait-time ${textColor}">
-                        <span class="status-dot ${dotColor} ${pulseClass}"></span>
-                        ${displayWait}
-                    </span>
-                `;
-                listContainer.appendChild(row);
-            });
+        // Strategy to calculate alignment shift to hit top of the minute precisely
+        function scheduleNextMinuteSync() {
+            const now = new Date();
+            // Milliseconds left until current clock hits :00 seconds
+            const delayUntilNextMinute = (60 - now.getSeconds()) * 1000 - now.getMilliseconds();
+            
+            setTimeout(() => {
+                // Execute precisely at the top of the minute
+                fetchWaitTimes();
+                // Then repeat precisely every 60 seconds (60,000ms) moving forward
+                setInterval(fetchWaitTimes, 60000);
+            }, delayUntilNextMinute);
         }
 
+        // Initialize execution sequences sequentially on thread load
         fetchWaitTimes();
-        setInterval(fetchWaitTimes, 60000);
+        scheduleNextMinuteSync();
+        runLiveClockTracker();
     </script>
 </body>
 </html>
