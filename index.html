@@ -98,22 +98,6 @@
             flex-direction: column;
         }
 
-        /* Inline Logo Area at Top of Rides Container */
-        .logo-display {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            margin-bottom: 15px;
-            padding-bottom: 15px;
-            border-bottom: 2px solid #222;
-        }
-
-        .park-logo {
-            height: 65px;
-            max-width: 100%;
-            object-fit: contain;
-        }
-
         /* Ride Lists */
         .ride-list {
             display: flex;
@@ -191,10 +175,6 @@
     </header>
 
     <div class="park-container">
-        <div class="logo-display" id="logoBox">
-            <img src="MK-logo.jpg" id="currentLogo" alt="Park Logo" class="park-logo" onerror="this.style.display='none'">
-        </div>
-        
         <div id="rideDisplayList" class="ride-list">
             <div class="loading">Loading live times...</div>
         </div>
@@ -214,38 +194,12 @@
             'aquatica': '9e2867f8-68eb-454f-b367-0ed0fd72d72a'
         };
 
-        // File name lookup logic mapped to your specific directory files
-        const parkLogos = {
-            'mk': 'MK-logo.jpg',
-            'epcot': 'Epcot-logo.jpg',
-            'hs': 'HS-logo.jpg',
-            'ak': 'AK-logo.jpg',
-            'usf': 'Universal-logo.jpg',
-            'ioa': 'Islands-logo.jpg',
-            'epic': 'epic-logo.jpg',
-            'seaworld': '', // blank if no local asset exists yet
-            'aquatica': ''  // blank if no local asset exists yet
-        };
-
-        // Track global state across asynchronous network cycles
         let activeParkKey = 'mk';
         let globalRideCache = {};
 
         function switchPark(parkKey) {
             activeParkKey = parkKey;
-            
-            // 1. Swap image sources safely
-            const logoImg = document.getElementById('currentLogo');
-            const logoFileName = parkLogos[parkKey];
-            
-            if (logoFileName) {
-                logoImg.src = logoFileName;
-                logoImg.style.display = 'block';
-            } else {
-                logoImg.style.display = 'none'; // Auto hide for SeaWorld/Aquatica if no image
-            }
 
-            // 2. Repopulate with instantly cached ride data array instantly if available
             if (globalRideCache[parkKey]) {
                 displayRides(globalRideCache[parkKey]);
             } else {
@@ -281,10 +235,8 @@
                         return a.name.localeCompare(b.name);
                     });
 
-                    // Update memory array allocation bounds
                     globalRideCache[localId] = rides;
 
-                    // If it matches the current active tab panel state, execute screen repaint
                     if (localId === activeParkKey) {
                         displayRides(rides);
                     }
