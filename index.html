@@ -98,11 +98,13 @@
             box-shadow: 0 0 25px var(--glow-color);
         }
 
+        /* --- CENTERED PARK TITLE --- */
         .park-title-header {
             font-size: 1.6rem;
             font-weight: 800;
             color: #fff;
             margin-bottom: 4px;
+            text-align: center;
         }
 
         .park-divider {
@@ -654,7 +656,6 @@
             }, delayUntilNextMinute);
         }
 
-        // Make sure initialization waits for DOM elements to load safely
         window.addEventListener('DOMContentLoaded', () => {
             fetchWaitTimes();
             scheduleNextMinuteSync();
