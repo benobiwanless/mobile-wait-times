@@ -102,12 +102,14 @@
         .park-stats-dashboard {
             display: flex;
             justify-content: space-around;
+            align-items: center;
             background: #1c1c1c;
             border: 1px solid #2a2a2a;
             border-radius: 8px;
             padding: 14px;
             margin-bottom: 20px;
             text-align: center;
+            gap: 16px;
         }
 
         .stat-box {
@@ -126,10 +128,37 @@
             font-size: 1.1rem;
             font-weight: bold;
             color: #fff;
+            white-space: nowrap; /* Prevents text from breaking mid-word or breaking AM/PM apart */
         }
 
         .stat-box .stat-value.avg-wait-highlight {
             color: var(--primary);
+        }
+
+        /* Responsive adjustments for smaller screens like iPhone */
+        @media (max-width: 480px) {
+            body {
+                padding: 12px;
+                padding-top: 85px;
+            }
+            .park-container {
+                padding: 14px;
+            }
+            .park-stats-dashboard {
+                flex-direction: column; /* Stack hours on top of average wait time */
+                gap: 12px;
+                padding: 12px;
+            }
+            .stat-box {
+                width: 100%;
+            }
+            .stat-box:first-child {
+                border-bottom: 1px solid #2a2a2a;
+                padding-bottom: 10px;
+            }
+            .stat-box .stat-value {
+                font-size: 1.2rem; /* Make text slightly larger and easier to read when stacked */
+            }
         }
 
         /* Ride Lists */
@@ -318,11 +347,9 @@
                     const dd = String(localDate.getDate()).padStart(2, '0');
                     const todayStr = `${yyyy}-${mm}-${dd}`;
                     
-                    // Fallback filtering strategy to catch overlapping types (OPERATING, TICKETED_EVENT, etc.)
                     let operationalDays = data.schedule.filter(day => day.date === todayStr && day.type === "OPERATING");
                     
                     if (operationalDays.length === 0) {
-                        // Fallback: If no strict match for today, grab the first operational schedule object available
                         operationalDays = data.schedule.filter(day => day.type === "OPERATING");
                     }
                     
