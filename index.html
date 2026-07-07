@@ -29,7 +29,7 @@
             color: var(--text-color);
             padding: 16px;
             line-height: 1.5;
-            padding-top: 90px; /* Leave space for the fixed dropdown header */
+            padding-top: 90px; /* Space for fixed dropdown header */
         }
 
         /* --- FIXED DROPDOWN HEADER AREA --- */
@@ -87,7 +87,7 @@
             pointer-events: none;
         }
 
-        /* --- PARK CONTAINER WITH SIGNATURE GLOW CARD --- */
+        /* --- PARK CONTAINER CARD --- */
         .park-container {
             background: var(--card-bg);
             border: 2px solid #222;
@@ -178,7 +178,7 @@
             }
         }
 
-        /* --- RIDE LISTS ROWS --- */
+        /* --- RIDE ROWS AND BADGES --- */
         .ride-list {
             display: flex;
             flex-direction: column;
@@ -198,9 +198,23 @@
             border-bottom: none;
         }
 
-        .ride-name {
+        .ride-meta-container {
+            display: flex;
+            flex-direction: column;
             padding-right: 15px;
+        }
+
+        .ride-name {
             color: #ddd;
+        }
+
+        .park-badge {
+            font-size: 0.65rem;
+            font-weight: 800;
+            color: #777;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+            margin-top: 2px;
         }
 
         .wait-time {
@@ -264,9 +278,8 @@
                     <option value="ioa">Islands of Adventure</option>
                     <option value="epic">Epic Universe</option>
                 </optgroup>
-                <optgroup label="Other">
-                    <option value="seaworld">SeaWorld Orlando</option>
-                    <option value="aquatica">Aquatica Orlando</option>
+                <optgroup label="Aggregated Monitors">
+                    <option value="all">All Parks (Orlando)</option>
                 </optgroup>
             </select>
         </div>
@@ -276,263 +289,4 @@
         <div id="dynamicParkTitle" class="park-title-header">Magic Kingdom</div>
         <div class="park-divider"></div>
 
-        <div id="syncTimeStatus" class="sync-timestamp-bar">Connecting to stream...</div>
-
-        <div class="park-stats-dashboard">
-            <div class="stat-box">
-                <div class="stat-label">Today's Hours</div>
-                <div id="parkHoursValue" class="stat-value">Fetching...</div>
-            </div>
-            <div class="stat-box">
-                <div class="stat-label">Avg. Wait Time</div>
-                <div id="parkAvgWaitValue" class="stat-value avg-wait-highlight">--</div>
-            </div>
-        </div>
-
-        <div id="rideDisplayList" class="ride-list">
-            <div class="loading">Loading live times...</div>
-        </div>
-    </div>
-
-    <script>
-        const API_BASE = "https://api.themeparks.wiki/v1";
-
-        const parkIds = {
-            'mk': '75ea578a-adc8-4116-a54d-dccb60765ef9',    
-            'epcot': '47f90d2c-e191-4239-a466-5892ef59a88b', 
-            'hs': '288747d1-8b4f-4a64-867e-ea7c9b27bad8',    
-            'ak': '1c84a229-8862-4648-9c71-378ddd2c7693',     
-            'usf': 'eb3f4560-2383-4a36-9152-6b3e5ed6bc57',   
-            'ioa': '267615cc-8943-4c2a-ae2c-5da728ca591f',   
-            'epic': '12dbb85b-265f-44e6-bccf-f1faa17211fc',
-            'seaworld': '27d64dee-d85e-48dc-ad6d-8077445cd946',
-            'aquatica': '9e2867f8-68eb-454f-b367-0ed0fd72d72a'
-        };
-
-        let activeParkKey = 'mk';
-        let globalRideCache = {};
-        let globalHoursCache = {};
-        let lastFetchTimestamp = null;
-
-        function switchPark(parkKey) {
-            activeParkKey = parkKey;
-            
-            // Map selected values to clear text titles dynamically inside your card view layout
-            const selector = document.getElementById('parkSelect');
-            const selectedOption = selector.options[selector.selectedIndex];
-            document.getElementById('dynamicParkTitle').innerText = selectedOption.text;
-
-            updateDashboardDisplay(parkKey);
-            
-            if (globalRideCache[parkKey]) {
-                displayRides(globalRideCache[parkKey]);
-            } else {
-                document.getElementById('rideDisplayList').innerHTML = '<div class="loading">Loading live times...</div>';
-                fetchWaitTimes();
-            }
-        }
-
-        function formatTimeString(isoString) {
-            if (!isoString) return '';
-            try {
-                const date = new Date(isoString);
-                return date.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
-            } catch (e) {
-                return '';
-            }
-        }
-
-        function updateDashboardDisplay(parkKey) {
-            const hoursEl = document.getElementById('parkHoursValue');
-            const avgWaitEl = document.getElementById('parkAvgWaitValue');
-
-            if (globalHoursCache[parkKey]) {
-                hoursEl.innerText = globalHoursCache[parkKey];
-            } else {
-                hoursEl.innerText = "Fetching...";
-                fetchParkHours(parkKey);
-            }
-
-            const rides = globalRideCache[parkKey];
-            if (rides && rides.length > 0) {
-                let operatingRides = rides.filter(r => r.status === "OPERATING" && r.queue?.STANDBY?.waitTime !== undefined);
-                if (operatingRides.length > 0) {
-                    let totalWait = operatingRides.reduce((sum, r) => sum + r.queue.STANDBY.waitTime, 0);
-                    let avg = Math.round(totalWait / operatingRides.length);
-                    avgWaitEl.innerText = `${avg} min`;
-                } else {
-                    avgWaitEl.innerText = "Closed";
-                }
-            } else {
-                avgWaitEl.innerText = "--";
-            }
-        }
-
-        function runLiveClockTracker() {
-            setInterval(() => {
-                const statusEl = document.getElementById('syncTimeStatus');
-                if (!lastFetchTimestamp) {
-                    statusEl.innerText = "Waiting for initial sync...";
-                    return;
-                }
-                const elapsedSeconds = Math.floor((Date.now() - lastFetchTimestamp) / 1000);
-                if (elapsedSeconds < 5) {
-                    statusEl.innerText = "Updated just now";
-                } else {
-                    statusEl.innerText = `Updated ${elapsedSeconds}s ago`;
-                }
-            }, 1000);
-        }
-
-        async function fetchParkHours(parkKey) {
-            const wikiId = parkIds[parkKey];
-            try {
-                const response = await fetch(`${API_BASE}/entity/${wikiId}/schedule`);
-                if (!response.ok) throw new Error();
-                const data = await response.json();
-                
-                if (data && data.schedule && data.schedule.length > 0) {
-                    const localDate = new Date();
-                    const yyyy = localDate.getFullYear();
-                    const mm = String(localDate.getMonth() + 1).padStart(2, '0');
-                    const dd = String(localDate.getDate()).padStart(2, '0');
-                    const todayStr = `${yyyy}-${mm}-${dd}`;
-                    
-                    let operationalDays = data.schedule.filter(day => day.date === todayStr && day.type === "OPERATING");
-                    if (operationalDays.length === 0) {
-                        operationalDays = data.schedule.filter(day => day.type === "OPERATING");
-                    }
-                    
-                    if (operationalDays.length > 0 && operationalDays[0].openingTime) {
-                        const target = operationalDays[0];
-                        let hoursText = `${formatTimeString(target.openingTime)} - ${formatTimeString(target.closingTime)}`;
-                        globalHoursCache[parkKey] = hoursText;
-                    } else {
-                        globalHoursCache[parkKey] = "Closed / See App";
-                    }
-                } else {
-                    globalHoursCache[parkKey] = "Closed";
-                }
-                
-                if (parkKey === activeParkKey) {
-                    document.getElementById('parkHoursValue').innerText = globalHoursCache[parkKey];
-                }
-            } catch (e) {
-                if (parkKey === activeParkKey) document.getElementById('parkHoursValue').innerText = "Unavailable";
-            }
-        }
-
-        async function fetchSingleParkTimes(localId, wikiId) {
-            try {
-                const response = await fetch(`${API_BASE}/entity/${wikiId}/live`);
-                if (!response.ok) throw new Error('API server error');
-                
-                const data = await response.json();
-                if (!data || !data.liveData) return;
-                
-                const rides = data.liveData.filter(item => item.entityType === "ATTRACTION");
-                
-                rides.sort((a, b) => {
-                    const aOpen = a.status === "OPERATING";
-                    const bOpen = b.status === "OPERATING";
-                    
-                    if (aOpen && !bOpen) return -1;
-                    if (!aOpen && bOpen) return 1;
-                    
-                    if (aOpen && bOpen) {
-                        const aWait = a.queue?.STANDBY?.waitTime ?? 0;
-                        const bWait = b.queue?.STANDBY?.waitTime ?? 0;
-                        if (bWait !== aWait) return bWait - aWait;
-                    }
-                    return a.name.localeCompare(b.name);
-                });
-
-                globalRideCache[localId] = rides;
-
-                if (localId === activeParkKey) {
-                    updateDashboardDisplay(localId);
-                    displayRides(rides);
-                }
-            } catch (error) {
-                console.error(`Error pulling times for ${localId}:`, error);
-                if (localId === activeParkKey && !globalRideCache[localId]) {
-                    document.getElementById('rideDisplayList').innerHTML = '<div class="loading">Connection offline or pulling active database updates...</div>';
-                }
-            }
-        }
-
-        async function fetchWaitTimes() {
-            if (!globalHoursCache[activeParkKey]) {
-                fetchParkHours(activeParkKey);
-            }
-
-            const fetchPromises = Object.entries(parkIds).map(([localId, wikiId]) => 
-                fetchSingleParkTimes(localId, wikiId)
-            );
-
-            await Promise.allSettled(fetchPromises);
-            lastFetchTimestamp = Date.now();
-        }
-
-        function displayRides(rides) {
-            const listContainer = document.getElementById('rideDisplayList');
-            listContainer.innerHTML = ''; 
-
-            if (!rides || rides.length === 0) {
-                listContainer.innerHTML = '<div class="loading">No active attraction times reported.</div>';
-                return;
-            }
-
-            rides.forEach(ride => {
-                const isOpen = ride.status === "OPERATING";
-                const wait = ride.queue?.STANDBY?.waitTime ?? 0;
-                
-                let dotColor = 'dot-green';
-                let pulseClass = '';
-                let textColor = 'green';
-                
-                if (!isOpen) {
-                    dotColor = 'dot-gray';
-                    textColor = 'gray';
-                } else if (wait >= 31) {
-                    dotColor = 'dot-red';
-                    textColor = 'red';
-                    if (wait >= 45) {
-                        pulseClass = 'pulse-red';
-                    }
-                } else if (wait >= 16) {
-                    dotColor = 'dot-yellow';
-                    textColor = 'yellow';
-                }
-
-                const displayWait = isOpen ? `${wait}m` : 'Closed';
-
-                const row = document.createElement('div');
-                row.className = 'ride-row';
-                row.innerHTML = `
-                    <span class="ride-name">${ride.name}</span>
-                    <span class="wait-time ${textColor}">
-                        <span class="status-dot ${dotColor} ${pulseClass}"></span>
-                        ${displayWait}
-                    </span>
-                `;
-                listContainer.appendChild(row);
-            });
-        }
-
-        function scheduleNextMinuteSync() {
-            const now = new Date();
-            const delayUntilNextMinute = (60 - now.getSeconds()) * 1000 - now.getMilliseconds();
-            
-            setTimeout(() => {
-                fetchWaitTimes();
-                setInterval(fetchWaitTimes, 60000);
-            }, delayUntilNextMinute);
-        }
-
-        fetchWaitTimes();
-        scheduleNextMinuteSync();
-        runLiveClockTracker();
-    </script>
-</body>
-</html>
+        <div id
