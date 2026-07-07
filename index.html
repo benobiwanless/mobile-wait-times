@@ -31,7 +31,6 @@
             line-height: 1.5;
         }
 
-        /* --- NAVIGATION MENU MATCHING YOUR SCREENSHOT --- */
         .nav-container {
             max-width: 1000px;
             margin: 0 auto 24px auto;
@@ -82,7 +81,6 @@
             border-radius: 4px 4px 0 0;
         }
 
-        /* --- PARK CONTAINER WITH BLUE GLOW HOVER MATCHING YOUR SCREENSHOT --- */
         .park-container {
             background: var(--card-bg);
             border: 2px solid #222;
@@ -92,11 +90,9 @@
             margin: 0 auto;
             display: flex;
             flex-direction: column;
-            box-shadow: 0 0 25px var(--glow-color); /* The signature blue glow card border */
-            transition: box-shadow 0.3s ease;
+            box-shadow: 0 0 25px var(--glow-color);
         }
 
-        /* Dynamic header matching screenshot */
         .park-title-header {
             font-size: 1.6rem;
             font-weight: 800;
@@ -104,7 +100,6 @@
             margin-bottom: 4px;
         }
 
-        /* Divider line matching screenshot */
         .park-divider {
             height: 1px;
             background: #2a2a2a;
@@ -112,7 +107,6 @@
             width: 100%;
         }
 
-        /* Relative Counter Sync Text */
         .sync-timestamp-bar {
             text-align: center;
             font-size: 0.75rem;
@@ -123,7 +117,6 @@
             margin-bottom: 16px;
         }
 
-        /* Live Overview Dashboard Panel */
         .park-stats-dashboard {
             display: flex;
             justify-content: space-around;
@@ -160,7 +153,6 @@
             color: var(--primary);
         }
 
-        /* Mobile Layout Adjustments */
         @media (max-width: 480px) {
             .park-stats-dashboard {
                 flex-direction: column;
@@ -176,7 +168,6 @@
             }
         }
 
-        /* Ride Lists */
         .ride-list {
             display: flex;
             flex-direction: column;
@@ -213,7 +204,6 @@
         .red { color: var(--red); }
         .gray { color: #666; }
 
-        /* Status Dot Foundations */
         .status-dot {
             width: 10px;
             height: 10px;
@@ -227,7 +217,6 @@
         .dot-red { background-color: var(--red); }
         .dot-gray { background-color: #444; }
         
-        /* Danger Pulse animation */
         .pulse-red {
             animation: pulse-danger 0.9s infinite ease-in-out;
             box-shadow: 0 0 12px var(--red);
@@ -253,26 +242,25 @@
     <div class="nav-container">
         <div class="nav-row">
             <span class="nav-label">Disney</span>
-            <button class="nav-btn active" data-park="mk" onclick="switchPark('mk', this)">Magic Kingdom</button>
-            <button class="nav-btn" data-park="epcot" onclick="switchPark('epcot', this)">EPCOT</button>
-            <button class="nav-btn" data-park="hs" onclick="switchPark('hs', this)">Hollywood</button>
-            <button class="nav-btn" data-park="ak" onclick="switchPark('ak', this)">Animal Kingdom</button>
+            <button class="nav-btn active" onclick="switchPark('mk', this)">Magic Kingdom</button>
+            <button class="nav-btn" onclick="switchPark('epcot', this)">EPCOT</button>
+            <button class="nav-btn" onclick="switchPark('hs', this)">Hollywood</button>
+            <button class="nav-btn" onclick="switchPark('ak', this)">Animal Kingdom</button>
         </div>
         <div class="nav-row">
             <span class="nav-label">Universal</span>
-            <button class="nav-btn" data-park="usf" onclick="switchPark('usf', this)">Studios</button>
-            <button class="nav-btn" data-park="ioa" onclick="switchPark('ioa', this)">Islands</button>
-            <button class="nav-btn" data-park="epic" onclick="switchPark('epic', this)">Epic Universe</button>
+            <button class="nav-btn" onclick="switchPark('usf', this)">Studios</button>
+            <button class="nav-btn" onclick="switchPark('ioa', this)">Islands</button>
+            <button class="nav-btn" onclick="switchPark('epic', this)">Epic Universe</button>
         </div>
         <div class="nav-row">
             <span class="nav-label">Other</span>
-            <button class="nav-btn" data-park="seaworld" onclick="switchPark('seaworld', this)">SeaWorld</button>
-            <button class="nav-btn" data-park="aquatica" onclick="switchPark('aquatica', this)">Aquatica</button>
+            <button class="nav-btn" onclick="switchPark('seaworld', this)">SeaWorld</button>
+            <button class="nav-btn" onclick="switchPark('aquatica', this)">Aquatica</button>
         </div>
     </div>
 
     <div class="park-container">
-        
         <div id="dynamicParkTitle" class="park-title-header">Magic Kingdom</div>
         <div class="park-divider"></div>
 
@@ -314,17 +302,15 @@
         let globalHoursCache = {};
         let lastFetchTimestamp = null;
 
-        // Upgraded helper to transition selection state seamlessly between navigation bar buttons
         function switchPark(parkKey, element) {
             activeParkKey = parkKey;
             
-            // 1. Clear previous active styles across all buttons
             document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
-            // 2. Inject active highlight style to currently clicked target
-            element.classList.add('active');
+            if (element) element.classList.add('active');
 
-            // 3. Update Text Header Title inside card container
-            document.getElementById('dynamicParkTitle').innerText = element.innerText;
+            if (element) {
+                document.getElementById('dynamicParkTitle').innerText = element.innerText;
+            }
 
             updateDashboardDisplay(parkKey);
             
@@ -403,7 +389,6 @@
                     const todayStr = `${yyyy}-${mm}-${dd}`;
                     
                     let operationalDays = data.schedule.filter(day => day.date === todayStr && day.type === "OPERATING");
-                    
                     if (operationalDays.length === 0) {
                         operationalDays = data.schedule.filter(day => day.type === "OPERATING");
                     }
@@ -461,7 +446,7 @@
             } catch (error) {
                 console.error(`Error pulling times for ${localId}:`, error);
                 if (localId === activeParkKey && !globalRideCache[localId]) {
-                    document.getElementById('rideDisplayList').innerHTML = '<div class="loading">Offline or waiting for data update...</div>';
+                    document.getElementById('rideDisplayList').innerHTML = '<div class="loading">Connection offline or pulling active database updates...</div>';
                 }
             }
         }
@@ -477,6 +462,52 @@
 
             await Promise.allSettled(fetchPromises);
             lastFetchTimestamp = Date.now();
+        }
+
+        function displayRides(rides) {
+            const listContainer = document.getElementById('rideDisplayList');
+            listContainer.innerHTML = ''; 
+
+            if (!rides || rides.length === 0) {
+                listContainer.innerHTML = '<div class="loading">No active attraction times reported.</div>';
+                return;
+            }
+
+            rides.forEach(ride => {
+                const isOpen = ride.status === "OPERATING";
+                const wait = ride.queue?.STANDBY?.waitTime ?? 0;
+                
+                let dotColor = 'dot-green';
+                let pulseClass = '';
+                let textColor = 'green';
+                
+                if (!isOpen) {
+                    dotColor = 'dot-gray';
+                    textColor = 'gray';
+                } else if (wait >= 31) {
+                    dotColor = 'dot-red';
+                    textColor = 'red';
+                    if (wait >= 45) {
+                        pulseClass = 'pulse-red';
+                    }
+                } else if (wait >= 16) {
+                    dotColor = 'dot-yellow';
+                    textColor = 'yellow';
+                }
+
+                const displayWait = isOpen ? `${wait}m` : 'Closed';
+
+                const row = document.createElement('div');
+                row.className = 'ride-row';
+                row.innerHTML = `
+                    <span class="ride-name">${ride.name}</span>
+                    <span class="wait-time ${textColor}">
+                        <span class="status-dot ${dotColor} ${pulseClass}"></span>
+                        ${displayWait}
+                    </span>
+                `;
+                listContainer.appendChild(row);
+            });
         }
 
         function scheduleNextMinuteSync() {
