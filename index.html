@@ -63,7 +63,7 @@
             border: 2px solid #444;
             border-radius: 8px;
             cursor: pointer;
-            appearance: none; /* Removes default arrow */
+            appearance: none; 
             -webkit-appearance: none;
             text-transform: uppercase;
             transition: border-color 0.2s ease;
@@ -74,7 +74,6 @@
             border-color: var(--primary);
         }
 
-        /* Custom Dropdown Arrow Icon */
         .select-container::after {
             content: "▼";
             font-size: 0.8rem;
@@ -86,23 +85,33 @@
             pointer-events: none;
         }
 
-        /* Park Sections */
-        .park-section {
-            display: none;
+        /* Park Container Card */
+        .park-container {
             background: var(--card-bg);
             border: 2px solid #333;
             border-radius: var(--border-radius);
             padding: 20px;
-            margin-bottom: 20px;
             max-width: 800px;
             margin-left: auto;
             margin-right: auto;
+            display: flex;
+            flex-direction: column;
         }
 
-        .park-section.active {
-            display: block;
-            border-color: var(--primary);
-            box-shadow: 0 0 15px var(--primary);
+        /* Inline Logo Area at Top of Rides Container */
+        .logo-display {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #222;
+        }
+
+        .park-logo {
+            height: 65px;
+            max-width: 100%;
+            object-fit: contain;
         }
 
         /* Ride Lists */
@@ -181,44 +190,18 @@
         </div>
     </header>
 
-    <div id="mk" class="park-section active">
-        <div id="mk-list" class="ride-list"><div class="loading">Loading live times...</div></div>
-    </div>
-
-    <div id="epcot" class="park-section">
-        <div id="epcot-list" class="ride-list"><div class="loading">Loading live times...</div></div>
-    </div>
-
-    <div id="hs" class="park-section">
-        <div id="hs-list" class="ride-list"><div class="loading">Loading live times...</div></div>
-    </div>
-
-    <div id="ak" class="park-section">
-        <div id="ak-list" class="ride-list"><div class="loading">Loading live times...</div></div>
-    </div>
-
-    <div id="usf" class="park-section">
-        <div id="usf-list" class="ride-list"><div class="loading">Loading live times...</div></div>
-    </div>
-
-    <div id="ioa" class="park-section">
-        <div id="ioa-list" class="ride-list"><div class="loading">Loading live times...</div></div>
-    </div>
-
-    <div id="epic" class="park-section">
-        <div id="epic-list" class="ride-list"><div class="loading">Loading live times...</div></div>
-    </div>
-
-    <div id="seaworld" class="park-section">
-        <div id="seaworld-list" class="ride-list"><div class="loading">Loading live times...</div></div>
-    </div>
-
-    <div id="aquatica" class="park-section">
-        <div id="aquatica-list" class="ride-list"><div class="loading">Loading live times...</div></div>
+    <div class="park-container">
+        <div class="logo-display" id="logoBox">
+            <img src="MK-logo.jpg" id="currentLogo" alt="Park Logo" class="park-logo" onerror="this.style.display='none'">
+        </div>
+        
+        <div id="rideDisplayList" class="ride-list">
+            <div class="loading">Loading live times...</div>
+        </div>
     </div>
 
     <script>
-        // Database mapping setup using explicit IDs
+        // Database mapping setup matching your specific IDs
         const parkIds = {
             'mk': '75ea578a-adc8-4116-a54d-dccb60765ef9',    
             'epcot': '47f90d2c-e191-4239-a466-5892ef59a88b', 
@@ -231,13 +214,42 @@
             'aquatica': '9e2867f8-68eb-454f-b367-0ed0fd72d72a'
         };
 
-        function switchPark(parkId) {
-            const sections = document.querySelectorAll('.park-section');
-            sections.forEach(section => section.classList.remove('active'));
+        // File name lookup logic mapped to your specific directory files
+        const parkLogos = {
+            'mk': 'MK-logo.jpg',
+            'epcot': 'Epcot-logo.jpg',
+            'hs': 'HS-logo.jpg',
+            'ak': 'AK-logo.jpg',
+            'usf': 'Universal-logo.jpg',
+            'ioa': 'Islands-logo.jpg',
+            'epic': 'epic-logo.jpg',
+            'seaworld': '', // blank if no local asset exists yet
+            'aquatica': ''  // blank if no local asset exists yet
+        };
 
-            const targetSection = document.getElementById(parkId);
-            if (targetSection) {
-                targetSection.classList.add('active');
+        // Track global state across asynchronous network cycles
+        let activeParkKey = 'mk';
+        let globalRideCache = {};
+
+        function switchPark(parkKey) {
+            activeParkKey = parkKey;
+            
+            // 1. Swap image sources safely
+            const logoImg = document.getElementById('currentLogo');
+            const logoFileName = parkLogos[parkKey];
+            
+            if (logoFileName) {
+                logoImg.src = logoFileName;
+                logoImg.style.display = 'block';
+            } else {
+                logoImg.style.display = 'none'; // Auto hide for SeaWorld/Aquatica if no image
+            }
+
+            // 2. Repopulate with instantly cached ride data array instantly if available
+            if (globalRideCache[parkKey]) {
+                displayRides(globalRideCache[parkKey]);
+            } else {
+                document.getElementById('rideDisplayList').innerHTML = '<div class="loading">Loading live times...</div>';
             }
         }
 
@@ -269,19 +281,27 @@
                         return a.name.localeCompare(b.name);
                     });
 
-                    displayRides(localId, rides);
+                    // Update memory array allocation bounds
+                    globalRideCache[localId] = rides;
+
+                    // If it matches the current active tab panel state, execute screen repaint
+                    if (localId === activeParkKey) {
+                        displayRides(rides);
+                    }
                 } catch (error) {
                     console.error(`Error pulling times for ${localId}:`, error);
-                    document.getElementById(`${localId}-list`).innerHTML = '<div class="loading">Offline or waiting for data update...</div>';
+                    if (localId === activeParkKey && !globalRideCache[localId]) {
+                        document.getElementById('rideDisplayList').innerHTML = '<div class="loading">Offline or waiting for data update...</div>';
+                    }
                 }
             }
         }
 
-        function displayRides(containerId, rides) {
-            const listContainer = document.getElementById(`${containerId}-list`);
+        function displayRides(rides) {
+            const listContainer = document.getElementById('rideDisplayList');
             listContainer.innerHTML = ''; 
 
-            if (rides.length === 0) {
+            if (!rides || rides.length === 0) {
                 listContainer.innerHTML = '<div class="loading">No active attraction times reported.</div>';
                 return;
             }
