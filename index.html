@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Theme Park Wait Times</title>
+    <style>
+        :root {
+            --bg-color: #f4f6f9;
+            --card-bg: #ffffff;
+            --text-color: #333333;
+            --border-radius: 12px;
+            --green: #2ecc71;
+            --yellow: #f1c40f;
+            --red: #e74c3c;
+            --primary: #3498db;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            padding: 16px;
+            line-height: 1.5;
+            padding-top: 80px; /* Space for the sticky nav */
+        }
+
+        /* Sticky Navigation Bar for switching parks */
+        nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: var(--card-bg);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            z-index: 1000;
+            display: flex;
+            overflow-x: auto; /* Allows horizontal scrolling on small phones */
+            white-space: nowrap;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        nav button {
+            flex: 1;
+            padding: 14px 16px;
+            border: none;
+            background: none;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #7f8c8d;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            transition: all 0.2s ease;
+            min-width: 100px;
+        }
+
+        nav button.active {
+            color: var(--primary);
+            border-bottom-color: var(--primary);
+        }
+
+        /* Park Sections */
+        .park-section {
+            display: none; /* Hidden by default, controlled by JS */
+            background: var(--card-bg);
+            border-radius: var(--border-radius);
+            padding: 16px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        }
+
+        .park-section.active {
+            display: block; /* Show the active park */
+        }
+
+        /* Logo and Header Styling */
+        .park-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 12px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #eee;
+        }
+
+        .park-logo {
+            width: 40px; /* Adjust size as needed */
+            height: 40px;
+            object-fit: contain;
+            border-radius: 6px;
+            background: #f0f0f0; /* Fallback placeholder background */
+        }
+
+        h2 {
+            font-size: 1.2rem;
+        }
+
+        /* Ride Rows */
+        .ride-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid #f1f1f1;
+        }
+
+        .ride-row:last-child {
+            border-bottom: none;
+        }
+
+        .ride-name {
+            font-size: 0.95rem;
+            font-weight: 500;
+            padding-right: 10px;
+        }
+
+        .wait-time {
+            display: flex;
+            align-items: center;
+            font-weight: 600;
+            font-size: 0.9rem;
+            white-space: nowrap;
+        }
+
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-right: 8px;
+            display: inline-block;
+        }
+
+        .dot-green { background-color: var(--green); }
+        .dot-yellow { background-color: var(--yellow); }
+        .dot-red { background-color: var(--red); }
+    </style>
+</head>
+<body>
+
+    <!-- Dynamic Park Switcher Nav -->
+    <nav>
+        <button class="nav-btn active" onclick="switchPark('mk')">Magic Kingdom</button>
+        <button class="nav-btn" onclick="switchPark('epcot')">EPCOT</button>
+        <button class="nav-btn" onclick="switchPark('hs')">Hollywood</button>
+        <button class="nav-btn" onclick="switchPark('ak')">Animal Kingdom</button>
+    </nav>
+
+    <!-- Magic Kingdom -->
+    <div id="mk" class="park-section active">
+        <div class="park-header">
+            <!-- REPLACE 'mk-logo.png' WITH YOUR LOGO FILE PATH OR URL -->
+            <img src="mk-logo.png" alt="Magic Kingdom Logo" class="park-logo" onerror="this.style.display='none'">
+            <h2>Magic Kingdom</h2>
+        </div>
+        <div class="ride-row">
+            <span class="ride-name">Space Mountain</span>
+            <span class="wait-time"><span class="status-dot dot-yellow"></span>45 min</span>
+        </div>
+        <div class="ride-row">
+            <span class="ride-name">Seven Dwarfs Mine Train</span>
+            <span class="wait-time"><span class="status-dot dot-red"></span>75 min</span>
+        </div>
+        <div class="ride-row">
+            <span class="ride-name">Big Thunder Mountain</span>
+            <span class="wait-time"><span class="status-dot dot-green"></span>30 min</span>
+        </div>
+        <div class="ride-row">
+            <span class="ride-name">Pirates of the Caribbean</span>
+            <span class="wait-time"><span class="status-dot dot-green"></span>20 min</span>
+        </div>
+    </div>
+
+    <!-- EPCOT -->
+    <div id="epcot" class="park-section">
+        <div class="park-header">
+            <!-- REPLACE 'epcot-logo.png' WITH YOUR LOGO FILE PATH OR URL -->
+            <img src="epcot-logo.png" alt="EPCOT Logo" class="park-logo" onerror="this.style.display='none'">
+            <h2>EPCOT</h2>
+        </div>
+        <div class="ride-row">
+            <span class="ride-name">Guardians of the Galaxy: Cosmic Rewind</span>
+            <span class="wait-time"><span class="status-dot dot-red"></span>85 min</span>
+        </div>
+        <div class="ride-row">
+            <span class="ride-name">Remi's Ratatouille Adventure</span>
+            <span class="wait-time"><span class="status-dot dot-yellow"></span>60 min</span>
+        </div>
+        <div class="ride-row">
+            <span class="ride-name">Test Track</span>
+            <span class="wait-time"><span class="status-dot dot-green"></span>35 min</span>
+        </div>
+        <div class="ride-row">
+            <span class="ride-name">Soarin' Around the World</span>
+            <span class="wait-time"><span class="status-dot dot-green"></span>25 min</span>
+        </div>
+    </div>
+
+    <!-- Disney's Hollywood Studios -->
+    <div id="hs" class="park-section">
+        <div class="park-header">
+            <!-- REPLACE 'hs-logo.png' WITH YOUR LOGO FILE PATH OR URL -->
+            <img src="hs-logo.png" alt="Hollywood Studios Logo" class="park-logo" onerror="this.style.display='none'">
+            <h2>Hollywood Studios</h2>
+        </div>
+        <div class="ride-row">
+            <span class="ride-name">Star Wars: Rise of the Resistance</span>
+            <span class="wait-time"><span class="status-dot dot-red"></span>95 min</span>
+        </div>
+        <div class="ride-row">
+            <span class="ride-name">Slinky Dog Dash</span>
+            <span class="wait-time"><span class="status-dot dot-red"></span>70 min</span>
+        </div>
+        <div class="ride-row">
+            <span class="ride-name">Tower of Terror</span>
+            <span class="wait-time"><span class="status-dot dot-yellow"></span>45 min</span>
+        </div>
+        <div class="ride-row">
+            <span class="ride-name">Toy Story Mania!</span>
+            <span class="wait-time"><span class="status-dot dot-green"></span>30 min</span>
+        </div>
+    </div>
+
+    <!-- Disney's Animal Kingdom -->
+    <div id="ak" class="park-section">
+        <div class="park-header">
+            <!-- REPLACE 'ak-logo.png' WITH YOUR LOGO FILE PATH OR URL -->
+            <img src="ak-logo.png" alt="Animal Kingdom Logo" class="park-logo" onerror="this.style.display='none'">
+            <h2>Animal Kingdom</h2>
+        </div>
+        <div class="ride-row">
+            <span class="ride-name">Avatar Flight of Passage</span>
+            <span class="wait-time"><span class="status-dot dot-red"></span>80 min</span>
+        </div>
+        <div class="ride-row">
+            <span class="ride-name">Expedition Everest</span>
+            <span class="wait-time"><span class="status-dot dot-green"></span>25 min</span>
+        </div>
+        <div class="ride-row">
+            <span class="ride-name">Kilimanjaro Safaris</span>
+            <span class="wait-time"><span class="status-dot dot-green"></span>30 min</span>
+        </div>
+        <div class="ride-row">
+            <span class="ride-name">DINOSAUR</span>
+            <span class="wait-time"><span class="status-dot dot-green"></span>15 min</span>
+        </div>
+    </div>
+
+    <script>
+        function switchPark(parkId) {
+            // Hide all park sections
+            const sections = document.querySelectorAll('.park-section');
+            sections.forEach(section => section.classList.remove('active'));
+
+            // Deactivate all navigation buttons
+            const buttons = document.querySelectorAll('.nav-btn');
+            buttons.forEach(btn => btn.classList.remove('active'));
+
+            // Show selected park section
+            document.getElementById(parkId).classList.add('active');
+
+            // Find clicked button and mark active
+            event.currentTarget.classList.add('active');
+        }
+    </script>
+</body>
+</html>
