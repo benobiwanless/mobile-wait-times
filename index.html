@@ -308,6 +308,7 @@
                 displayRides(globalRideCache[parkKey]);
             } else {
                 document.getElementById('rideDisplayList').innerHTML = '<div class="loading">Loading live times...</div>';
+                fetchWaitTimes(); // Instantly try refetching if cache dropped
             }
         }
 
@@ -347,7 +348,6 @@
             }
         }
 
-        // Live ticking loop runner updating relative seconds text string
         function runLiveClockTracker() {
             setInterval(() => {
                 const statusEl = document.getElementById('syncTimeStatus');
@@ -403,66 +403,71 @@
             }
         }
 
+        // Isolated individual park query logic wrapper
+        async function fetchSingleParkTimes(localId, wikiId) {
+            try {
+                const response = await fetch(`https://api.themeparks.wiki/v1/entity/${wikiId}/live`);
+                if (!response.ok) throw new Error('API server error');
+                
+                const data = await response.json();
+                const rides = data.liveData.filter(item => item.entityType === "ATTRACTION");
+                
+                rides.sort((a, b) => {
+                    const aOpen = a.status === "OPERATING";
+                    const bOpen = b.status === "OPERATING";
+                    
+                    if (aOpen && !bOpen) return -1;
+                    if (!aOpen && bOpen) return 1;
+                    
+                    if (aOpen && bOpen) {
+                        const aWait = a.queue?.STANDBY?.waitTime ?? 0;
+                        const bWait = b.queue?.STANDBY?.waitTime ?? 0;
+                        if (bWait !== aWait) return bWait - aWait;
+                    }
+                    return a.name.localeCompare(b.name);
+                });
+
+                globalRideCache[localId] = rides;
+
+                if (localId === activeParkKey) {
+                    updateDashboardDisplay(localId);
+                    displayRides(rides);
+                }
+            } catch (error) {
+                console.error(`Error pulling times for ${localId}:`, error);
+                // Fallback: if we have NO data whatsoever for the active park, flag the user
+                if (localId === activeParkKey && !globalRideCache[localId]) {
+                    document.getElementById('rideDisplayList').innerHTML = '<div class="loading">Offline or waiting for data update...</div>';
+                }
+            }
+        }
+
         async function fetchWaitTimes() {
             if (!globalHoursCache[activeParkKey]) {
                 fetchParkHours(activeParkKey);
             }
 
-            for (const [localId, wikiId] of Object.entries(parkIds)) {
-                try {
-                    const response = await fetch(`https://api.themeparks.wiki/v1/entity/${wikiId}/live`);
-                    if (!response.ok) throw new Error('API server unreachable');
-                    
-                    const data = await response.json();
-                    const rides = data.liveData.filter(item => item.entityType === "ATTRACTION");
-                    
-                    rides.sort((a, b) => {
-                        const aOpen = a.status === "OPERATING";
-                        const bOpen = b.status === "OPERATING";
-                        
-                        if (aOpen && !bOpen) return -1;
-                        if (!aOpen && bOpen) return 1;
-                        
-                        if (aOpen && bOpen) {
-                            const aWait = a.queue?.STANDBY?.waitTime ?? 0;
-                            const bWait = b.queue?.STANDBY?.waitTime ?? 0;
-                            if (bWait !== aWait) {
-                                return bWait - aWait;
-                            }
-                        }
-                        
-                        return a.name.localeCompare(b.name);
-                    });
+            // Create concurrent separate promises for each individual park mapping
+            const fetchPromises = Object.entries(parkIds).map(([localId, wikiId]) => 
+                fetchSingleParkTimes(localId, wikiId)
+            );
 
-                    globalRideCache[localId] = rides;
-
-                    if (localId === activeParkKey) {
-                        updateDashboardDisplay(localId);
-                        displayRides(rides);
-                    }
-                } catch (error) {
-                    console.error(`Error pulling times for ${localId}:`, error);
-                }
-            }
-            // Timestamp update lock
+            // Execute all endpoints concurrently without blocking each other
+            await Promise.allSettled(fetchPromises);
+            
             lastFetchTimestamp = Date.now();
         }
 
-        // Strategy to calculate alignment shift to hit top of the minute precisely
         function scheduleNextMinuteSync() {
             const now = new Date();
-            // Milliseconds left until current clock hits :00 seconds
             const delayUntilNextMinute = (60 - now.getSeconds()) * 1000 - now.getMilliseconds();
             
             setTimeout(() => {
-                // Execute precisely at the top of the minute
                 fetchWaitTimes();
-                // Then repeat precisely every 60 seconds (60,000ms) moving forward
                 setInterval(fetchWaitTimes, 60000);
             }, delayUntilNextMinute);
         }
 
-        // Initialize execution sequences sequentially on thread load
         fetchWaitTimes();
         scheduleNextMinuteSync();
         runLiveClockTracker();
