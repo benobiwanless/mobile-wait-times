@@ -28,11 +28,11 @@
             color: var(--text-color);
             padding: 16px;
             line-height: 1.5;
-            padding-top: 175px; /* Safely clears all 3 navigation rows */
+            padding-top: 90px; /* Space for the top bar fixed dropdown */
         }
 
-        /* Fixed Mobile Multi-Row Navigation */
-        nav {
+        /* Fixed Top Dropdown Header */
+        header {
             position: fixed;
             top: 0;
             left: 0;
@@ -41,50 +41,49 @@
             box-shadow: 0 4px 15px rgba(0,0,0,0.6);
             z-index: 1000;
             border-bottom: 2px solid #333;
+            padding: 14px 16px;
             display: flex;
-            flex-direction: column;
+            justify-content: center;
+            align-items: center;
         }
 
-        .nav-row {
-            display: flex;
-            overflow-x: auto;
-            white-space: nowrap;
-            -webkit-overflow-scrolling: touch;
-            border-bottom: 1px solid #2a2a2a;
+        .select-container {
+            width: 100%;
+            max-width: 500px;
+            position: relative;
         }
 
-        .nav-row:last-child {
-            border-bottom: none;
-        }
-
-        .nav-row::before {
-            content: attr(data-label);
-            padding: 12px 10px 12px 16px;
-            font-size: 0.75rem;
-            font-weight: 900;
-            color: #666;
-            text-transform: uppercase;
-            align-self: center;
-            min-width: 90px;
-        }
-
-        nav button {
-            padding: 12px 14px;
-            border: none;
-            background: none;
-            font-size: 0.85rem;
+        select {
+            width: 100%;
+            padding: 12px 40px 12px 16px;
+            font-size: 1rem;
             font-weight: 800;
-            color: #888888;
+            color: var(--text-color);
+            background-color: #2a2a2a;
+            border: 2px solid #444;
+            border-radius: 8px;
             cursor: pointer;
-            border-bottom: 3px solid transparent;
-            transition: all 0.2s ease;
-            min-width: 105px;
+            appearance: none; /* Removes default arrow */
+            -webkit-appearance: none;
             text-transform: uppercase;
+            transition: border-color 0.2s ease;
         }
 
-        nav button.active {
-            color: var(--primary);
-            border-bottom-color: var(--primary);
+        select:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        /* Custom Dropdown Arrow Icon */
+        .select-container::after {
+            content: "▼";
+            font-size: 0.8rem;
+            color: #888;
+            position: absolute;
+            right: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            pointer-events: none;
         }
 
         /* Park Sections */
@@ -179,23 +178,27 @@
 </head>
 <body>
 
-    <nav>
-        <div class="nav-row" data-label="Disney">
-            <button id="btn-mk" class="nav-btn active" onclick="switchPark('mk')">Magic Kingdom</button>
-            <button id="btn-epcot" class="nav-btn" onclick="switchPark('epcot')">EPCOT</button>
-            <button id="btn-hs" class="nav-btn" onclick="switchPark('hs')">Hollywood</button>
-            <button id="btn-ak" class="nav-btn" onclick="switchPark('ak')">Animal Kingdom</button>
+    <header>
+        <div class="select-container">
+            <select id="parkSelect" onchange="switchPark(this.value)">
+                <optgroup label="Disney">
+                    <option value="mk">Magic Kingdom</option>
+                    <option value="epcot">EPCOT</option>
+                    <option value="hs">Hollywood Studios</option>
+                    <option value="ak">Animal Kingdom</option>
+                </optgroup>
+                <optgroup label="Universal">
+                    <option value="usf">Universal Studios Florida</option>
+                    <option value="ioa">Islands of Adventure</option>
+                    <option value="epic">Epic Universe</option>
+                </optgroup>
+                <optgroup label="Other">
+                    <option value="seaworld">SeaWorld Orlando</option>
+                    <option value="aquatica">Aquatica Orlando</option>
+                </optgroup>
+            </select>
         </div>
-        <div class="nav-row" data-label="Universal">
-            <button id="btn-usf" class="nav-btn" onclick="switchPark('usf')">Studios</button>
-            <button id="btn-ioa" class="nav-btn" onclick="switchPark('ioa')">Islands</button>
-            <button id="btn-epic" class="nav-btn" onclick="switchPark('epic')">Epic Universe</button>
-        </div>
-        <div class="nav-row" data-label="Other">
-            <button id="btn-seaworld" class="nav-btn" onclick="switchPark('seaworld')">SeaWorld</button>
-            <button id="btn-aquatica" class="nav-btn" onclick="switchPark('aquatica')">Aquatica</button>
-        </div>
-    </nav>
+    </header>
 
     <div id="mk" class="park-section active">
         <div class="park-header">
@@ -268,7 +271,7 @@
     </div>
 
     <script>
-        // Verified database mapping setup using your explicit IDs
+        // Database mapping matching your specific IDs
         const parkIds = {
             'mk': '75ea578a-adc8-4116-a54d-dccb60765ef9',    
             'epcot': '47f90d2c-e191-4239-a466-5892ef59a88b', 
@@ -285,11 +288,10 @@
             const sections = document.querySelectorAll('.park-section');
             sections.forEach(section => section.classList.remove('active'));
 
-            const buttons = document.querySelectorAll('.nav-btn');
-            buttons.forEach(btn => btn.classList.remove('active'));
-
-            document.getElementById(parkId).classList.add('active');
-            document.getElementById(`btn-${parkId}`).classList.add('active');
+            const targetSection = document.getElementById(parkId);
+            if (targetSection) {
+                targetSection.classList.add('active');
+            }
         }
 
         async function fetchWaitTimes() {
@@ -301,16 +303,14 @@
                     const data = await response.json();
                     const rides = data.liveData.filter(item => item.entityType === "ATTRACTION");
                     
-                    // Sort custom logic: Longest wait time down to 0, then Closed at the bottom
+                    // Sorting logic: Longest wait time down to 0, followed by Closed at the bottom
                     rides.sort((a, b) => {
                         const aOpen = a.status === "OPERATING";
                         const bOpen = b.status === "OPERATING";
                         
-                        // 1. Handle Closed state stratification (push closed to bottom)
                         if (aOpen && !bOpen) return -1;
                         if (!aOpen && bOpen) return 1;
                         
-                        // 2. Both are open: Sort by wait times descending (longest first)
                         if (aOpen && bOpen) {
                             const aWait = a.queue?.STANDBY?.waitTime ?? 0;
                             const bWait = b.queue?.STANDBY?.waitTime ?? 0;
@@ -319,7 +319,6 @@
                             }
                         }
                         
-                        // 3. Tie breaker (or both are closed): Sort alphabetically
                         return a.name.localeCompare(b.name);
                     });
 
@@ -373,10 +372,10 @@
             });
         }
 
-        // Run instantly on launch
+        // Run network instantly on startup
         fetchWaitTimes();
         
-        // Auto background synchronization loop every 60 seconds
+        // Background sync loop running every 60 seconds
         setInterval(fetchWaitTimes, 60000);
     </script>
 </body>
