@@ -241,7 +241,6 @@
     </div>
 
     <script>
-        // Database mapping setup matching your specific IDs
         const parkIds = {
             'mk': '75ea578a-adc8-4116-a54d-dccb60765ef9',    
             'epcot': '47f90d2c-e191-4239-a466-5892ef59a88b', 
@@ -260,7 +259,6 @@
 
         function switchPark(parkKey) {
             activeParkKey = parkKey;
-
             updateDashboardDisplay(parkKey);
             
             if (globalRideCache[parkKey]) {
@@ -270,7 +268,6 @@
             }
         }
 
-        // Helper string time formatter (Converts 2026-07-06T08:00:00 to 8:00 AM)
         function formatTimeString(isoString) {
             if (!isoString) return '';
             try {
@@ -285,7 +282,6 @@
             const hoursEl = document.getElementById('parkHoursValue');
             const avgWaitEl = document.getElementById('parkAvgWaitValue');
 
-            // 1. Handle Hours Text
             if (globalHoursCache[parkKey]) {
                 hoursEl.innerText = globalHoursCache[parkKey];
             } else {
@@ -293,7 +289,6 @@
                 fetchParkHours(parkKey);
             }
 
-            // 2. Handle Computed Average Wait Time Text
             const rides = globalRideCache[parkKey];
             if (rides && rides.length > 0) {
                 let operatingRides = rides.filter(r => r.status === "OPERATING" && r.queue?.STANDBY?.waitTime !== undefined);
@@ -317,25 +312,33 @@
                 const data = await response.json();
                 
                 if (data && data.schedule && data.schedule.length > 0) {
-                    // FIX: Match strict local user timezone date strings instead of shifting into UTC tomorrow
                     const localDate = new Date();
                     const yyyy = localDate.getFullYear();
                     const mm = String(localDate.getMonth() + 1).padStart(2, '0');
                     const dd = String(localDate.getDate()).padStart(2, '0');
                     const todayStr = `${yyyy}-${mm}-${dd}`;
                     
-                    const todayHours = data.schedule.find(day => day.date === todayStr) || data.schedule[0];
+                    // Fallback filtering strategy to catch overlapping types (OPERATING, TICKETED_EVENT, etc.)
+                    let operationalDays = data.schedule.filter(day => day.date === todayStr && day.type === "OPERATING");
                     
-                    if (todayHours) {
-                        let hoursText = "Closed";
-                        if (todayHours.type === "OPERATING" && todayHours.openingTime) {
-                            hoursText = `${formatTimeString(todayHours.openingTime)} - ${formatTimeString(todayHours.closingTime)}`;
-                        }
-                        globalHoursCache[parkKey] = hoursText;
-                        if (parkKey === activeParkKey) {
-                            document.getElementById('parkHoursValue').innerText = hoursText;
-                        }
+                    if (operationalDays.length === 0) {
+                        // Fallback: If no strict match for today, grab the first operational schedule object available
+                        operationalDays = data.schedule.filter(day => day.type === "OPERATING");
                     }
+                    
+                    if (operationalDays.length > 0 && operationalDays[0].openingTime) {
+                        const target = operationalDays[0];
+                        let hoursText = `${formatTimeString(target.openingTime)} - ${formatTimeString(target.closingTime)}`;
+                        globalHoursCache[parkKey] = hoursText;
+                    } else {
+                        globalHoursCache[parkKey] = "Closed / See App";
+                    }
+                } else {
+                    globalHoursCache[parkKey] = "Closed";
+                }
+                
+                if (parkKey === activeParkKey) {
+                    document.getElementById('parkHoursValue').innerText = globalHoursCache[parkKey];
                 }
             } catch (e) {
                 if (parkKey === activeParkKey) document.getElementById('parkHoursValue').innerText = "Unavailable";
@@ -355,7 +358,6 @@
                     const data = await response.json();
                     const rides = data.liveData.filter(item => item.entityType === "ATTRACTION");
                     
-                    // Sorting logic: Longest wait time down to 0, followed by Closed at the bottom
                     rides.sort((a, b) => {
                         const aOpen = a.status === "OPERATING";
                         const bOpen = b.status === "OPERATING";
@@ -435,10 +437,7 @@
             });
         }
 
-        // Run network instantly on startup
         fetchWaitTimes();
-        
-        // Background sync loop running every 60 seconds
         setInterval(fetchWaitTimes, 60000);
     </script>
 </body>
