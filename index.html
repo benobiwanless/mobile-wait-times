@@ -3,24 +3,24 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Theme Park Wait Times</title>
+    <title>Live Theme Park Wait Times</title>
     <style>
         :root {
-            --bg-color: #f4f6f9;
-            --card-bg: #ffffff;
-            --text-color: #333333;
+            --bg-color: #000000;
+            --card-bg: #111111;
+            --text-color: #ffffff;
             --border-radius: 12px;
-            --green: #2ecc71;
-            --yellow: #f1c40f;
-            --red: #e74c3c;
-            --primary: #3498db;
+            --green: #00ff88;
+            --yellow: #ffcc00;
+            --red: #ff4444;
+            --primary: #3aa6ff;
         }
 
         * {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            font-family: Arial, sans-serif;
         }
 
         body {
@@ -28,36 +28,58 @@
             color: var(--text-color);
             padding: 16px;
             line-height: 1.5;
-            padding-top: 80px; /* Space for the sticky nav */
+            padding-top: 175px; /* Safely clears all 3 navigation rows */
         }
 
-        /* Sticky Navigation Bar for switching parks */
+        /* Fixed Mobile Multi-Row Navigation */
         nav {
             position: fixed;
             top: 0;
             left: 0;
             right: 0;
-            background: var(--card-bg);
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            background: #1a1a1a;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.6);
             z-index: 1000;
+            border-bottom: 2px solid #333;
             display: flex;
-            overflow-x: auto; /* Allows horizontal scrolling on small phones */
+            flex-direction: column;
+        }
+
+        .nav-row {
+            display: flex;
+            overflow-x: auto;
             white-space: nowrap;
             -webkit-overflow-scrolling: touch;
+            border-bottom: 1px solid #2a2a2a;
+        }
+
+        .nav-row:last-child {
+            border-bottom: none;
+        }
+
+        .nav-row::before {
+            content: attr(data-label);
+            padding: 12px 10px 12px 16px;
+            font-size: 0.75rem;
+            font-weight: 900;
+            color: #666;
+            text-transform: uppercase;
+            align-self: center;
+            min-width: 90px;
         }
 
         nav button {
-            flex: 1;
-            padding: 14px 16px;
+            padding: 12px 14px;
             border: none;
             background: none;
-            font-size: 0.9rem;
-            font-weight: 600;
-            color: #7f8c8d;
+            font-size: 0.85rem;
+            font-weight: 800;
+            color: #888888;
             cursor: pointer;
             border-bottom: 3px solid transparent;
             transition: all 0.2s ease;
-            min-width: 100px;
+            min-width: 105px;
+            text-transform: uppercase;
         }
 
         nav button.active {
@@ -67,47 +89,56 @@
 
         /* Park Sections */
         .park-section {
-            display: none; /* Hidden by default, controlled by JS */
+            display: none;
             background: var(--card-bg);
+            border: 2px solid #333;
             border-radius: var(--border-radius);
-            padding: 16px;
+            padding: 20px;
             margin-bottom: 20px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
         }
 
         .park-section.active {
-            display: block; /* Show the active park */
+            display: block;
+            border-color: var(--primary);
+            box-shadow: 0 0 15px var(--primary);
         }
 
-        /* Logo and Header Styling */
         .park-header {
             display: flex;
+            justify-content: space-between;
             align-items: center;
-            gap: 12px;
-            margin-bottom: 12px;
-            padding-bottom: 10px;
-            border-bottom: 2px solid #eee;
+            margin-bottom: 16px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid #333;
         }
 
         .park-logo {
-            width: 40px; /* Adjust size as needed */
-            height: 40px;
+            height: 55px;
             object-fit: contain;
-            border-radius: 6px;
-            background: #f0f0f0; /* Fallback placeholder background */
         }
 
         h2 {
-            font-size: 1.2rem;
+            font-size: 1.4rem;
+            font-weight: 800;
         }
 
-        /* Ride Rows */
+        /* Ride Lists */
+        .ride-list {
+            display: flex;
+            flex-direction: column;
+        }
+
         .ride-row {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 12px 0;
-            border-bottom: 1px solid #f1f1f1;
+            padding: 14px 0;
+            border-bottom: 1px solid #222;
+            font-size: 1.05rem;
+            font-weight: 700;
         }
 
         .ride-row:last-child {
@@ -115,158 +146,238 @@
         }
 
         .ride-name {
-            font-size: 0.95rem;
-            font-weight: 500;
-            padding-right: 10px;
+            padding-right: 15px;
         }
 
         .wait-time {
             display: flex;
             align-items: center;
-            font-weight: 600;
-            font-size: 0.9rem;
             white-space: nowrap;
         }
 
         .status-dot {
-            width: 10px;
-            height: 10px;
+            width: 12px;
+            height: 12px;
             border-radius: 50%;
-            margin-right: 8px;
+            margin-right: 10px;
             display: inline-block;
         }
 
-        .dot-green { background-color: var(--green); }
-        .dot-yellow { background-color: var(--yellow); }
-        .dot-red { background-color: var(--red); }
+        .dot-green { background-color: var(--green); color: var(--green); }
+        .dot-yellow { background-color: var(--yellow); color: var(--yellow); }
+        .dot-red { background-color: var(--red); color: var(--red); }
+        .dot-gray { background-color: #555555; color: #555555; }
+        
+        .loading {
+            text-align: center;
+            padding: 30px;
+            color: #888;
+            font-weight: bold;
+            font-size: 1.1rem;
+        }
     </style>
 </head>
 <body>
 
-    <!-- Dynamic Park Switcher Nav -->
     <nav>
-        <button class="nav-btn active" onclick="switchPark('mk')">Magic Kingdom</button>
-        <button class="nav-btn" onclick="switchPark('epcot')">EPCOT</button>
-        <button class="nav-btn" onclick="switchPark('hs')">Hollywood</button>
-        <button class="nav-btn" onclick="switchPark('ak')">Animal Kingdom</button>
+        <div class="nav-row" data-label="Disney">
+            <button id="btn-mk" class="nav-btn active" onclick="switchPark('mk')">Magic Kingdom</button>
+            <button id="btn-epcot" class="nav-btn" onclick="switchPark('epcot')">EPCOT</button>
+            <button id="btn-hs" class="nav-btn" onclick="switchPark('hs')">Hollywood</button>
+            <button id="btn-ak" class="nav-btn" onclick="switchPark('ak')">Animal Kingdom</button>
+        </div>
+        <div class="nav-row" data-label="Universal">
+            <button id="btn-usf" class="nav-btn" onclick="switchPark('usf')">Studios</button>
+            <button id="btn-ioa" class="nav-btn" onclick="switchPark('ioa')">Islands</button>
+            <button id="btn-epic" class="nav-btn" onclick="switchPark('epic')">Epic Universe</button>
+        </div>
+        <div class="nav-row" data-label="Other">
+            <button id="btn-seaworld" class="nav-btn" onclick="switchPark('seaworld')">SeaWorld</button>
+            <button id="btn-aquatica" class="nav-btn" onclick="switchPark('aquatica')">Aquatica</button>
+        </div>
     </nav>
 
-    <!-- Magic Kingdom -->
     <div id="mk" class="park-section active">
         <div class="park-header">
-            <!-- REPLACE 'mk-logo.png' WITH YOUR LOGO FILE PATH OR URL -->
-            <img src="mk-logo.png" alt="Magic Kingdom Logo" class="park-logo" onerror="this.style.display='none'">
             <h2>Magic Kingdom</h2>
+            <img src="MK-logo.jpg" alt="Magic Kingdom Logo" class="park-logo" onerror="this.style.display='none'">
         </div>
-        <div class="ride-row">
-            <span class="ride-name">Space Mountain</span>
-            <span class="wait-time"><span class="status-dot dot-yellow"></span>45 min</span>
-        </div>
-        <div class="ride-row">
-            <span class="ride-name">Seven Dwarfs Mine Train</span>
-            <span class="wait-time"><span class="status-dot dot-red"></span>75 min</span>
-        </div>
-        <div class="ride-row">
-            <span class="ride-name">Big Thunder Mountain</span>
-            <span class="wait-time"><span class="status-dot dot-green"></span>30 min</span>
-        </div>
-        <div class="ride-row">
-            <span class="ride-name">Pirates of the Caribbean</span>
-            <span class="wait-time"><span class="status-dot dot-green"></span>20 min</span>
-        </div>
+        <div id="mk-list" class="ride-list"><div class="loading">Loading live times...</div></div>
     </div>
 
-    <!-- EPCOT -->
     <div id="epcot" class="park-section">
         <div class="park-header">
-            <!-- REPLACE 'epcot-logo.png' WITH YOUR LOGO FILE PATH OR URL -->
-            <img src="epcot-logo.png" alt="EPCOT Logo" class="park-logo" onerror="this.style.display='none'">
             <h2>EPCOT</h2>
+            <img src="Epcot-logo.jpg" alt="EPCOT Logo" class="park-logo" onerror="this.style.display='none'">
         </div>
-        <div class="ride-row">
-            <span class="ride-name">Guardians of the Galaxy: Cosmic Rewind</span>
-            <span class="wait-time"><span class="status-dot dot-red"></span>85 min</span>
-        </div>
-        <div class="ride-row">
-            <span class="ride-name">Remi's Ratatouille Adventure</span>
-            <span class="wait-time"><span class="status-dot dot-yellow"></span>60 min</span>
-        </div>
-        <div class="ride-row">
-            <span class="ride-name">Test Track</span>
-            <span class="wait-time"><span class="status-dot dot-green"></span>35 min</span>
-        </div>
-        <div class="ride-row">
-            <span class="ride-name">Soarin' Around the World</span>
-            <span class="wait-time"><span class="status-dot dot-green"></span>25 min</span>
-        </div>
+        <div id="epcot-list" class="ride-list"><div class="loading">Loading live times...</div></div>
     </div>
 
-    <!-- Disney's Hollywood Studios -->
     <div id="hs" class="park-section">
         <div class="park-header">
-            <!-- REPLACE 'hs-logo.png' WITH YOUR LOGO FILE PATH OR URL -->
-            <img src="hs-logo.png" alt="Hollywood Studios Logo" class="park-logo" onerror="this.style.display='none'">
             <h2>Hollywood Studios</h2>
+            <img src="HS-logo.jpg" alt="Hollywood Studios Logo" class="park-logo" onerror="this.style.display='none'">
         </div>
-        <div class="ride-row">
-            <span class="ride-name">Star Wars: Rise of the Resistance</span>
-            <span class="wait-time"><span class="status-dot dot-red"></span>95 min</span>
-        </div>
-        <div class="ride-row">
-            <span class="ride-name">Slinky Dog Dash</span>
-            <span class="wait-time"><span class="status-dot dot-red"></span>70 min</span>
-        </div>
-        <div class="ride-row">
-            <span class="ride-name">Tower of Terror</span>
-            <span class="wait-time"><span class="status-dot dot-yellow"></span>45 min</span>
-        </div>
-        <div class="ride-row">
-            <span class="ride-name">Toy Story Mania!</span>
-            <span class="wait-time"><span class="status-dot dot-green"></span>30 min</span>
-        </div>
+        <div id="hs-list" class="ride-list"><div class="loading">Loading live times...</div></div>
     </div>
 
-    <!-- Disney's Animal Kingdom -->
     <div id="ak" class="park-section">
         <div class="park-header">
-            <!-- REPLACE 'ak-logo.png' WITH YOUR LOGO FILE PATH OR URL -->
-            <img src="ak-logo.png" alt="Animal Kingdom Logo" class="park-logo" onerror="this.style.display='none'">
             <h2>Animal Kingdom</h2>
+            <img src="AK-logo.jpg" alt="Animal Kingdom Logo" class="park-logo" onerror="this.style.display='none'">
         </div>
-        <div class="ride-row">
-            <span class="ride-name">Avatar Flight of Passage</span>
-            <span class="wait-time"><span class="status-dot dot-red"></span>80 min</span>
+        <div id="ak-list" class="ride-list"><div class="loading">Loading live times...</div></div>
+    </div>
+
+    <div id="usf" class="park-section">
+        <div class="park-header">
+            <h2>Universal Studios Florida</h2>
+            <img src="Universal-logo.jpg" alt="Universal Studios Logo" class="park-logo" onerror="this.style.display='none'">
         </div>
-        <div class="ride-row">
-            <span class="ride-name">Expedition Everest</span>
-            <span class="wait-time"><span class="status-dot dot-green"></span>25 min</span>
+        <div id="usf-list" class="ride-list"><div class="loading">Loading live times...</div></div>
+    </div>
+
+    <div id="ioa" class="park-section">
+        <div class="park-header">
+            <h2>Islands of Adventure</h2>
+            <img src="Islands-logo.jpg" alt="Islands of Adventure Logo" class="park-logo" onerror="this.style.display='none'">
         </div>
-        <div class="ride-row">
-            <span class="ride-name">Kilimanjaro Safaris</span>
-            <span class="wait-time"><span class="status-dot dot-green"></span>30 min</span>
+        <div id="ioa-list" class="ride-list"><div class="loading">Loading live times...</div></div>
+    </div>
+
+    <div id="epic" class="park-section">
+        <div class="park-header">
+            <h2>Epic Universe</h2>
+            <img src="epic-logo.jpg" alt="Epic Universe Logo" class="park-logo" onerror="this.style.display='none'">
         </div>
-        <div class="ride-row">
-            <span class="ride-name">DINOSAUR</span>
-            <span class="wait-time"><span class="status-dot dot-green"></span>15 min</span>
+        <div id="epic-list" class="ride-list"><div class="loading">Loading live times...</div></div>
+    </div>
+
+    <div id="seaworld" class="park-section">
+        <div class="park-header">
+            <h2>SeaWorld Orlando</h2>
         </div>
+        <div id="seaworld-list" class="ride-list"><div class="loading">Loading live times...</div></div>
+    </div>
+
+    <div id="aquatica" class="park-section">
+        <div class="park-header">
+            <h2>Aquatica Orlando</h2>
+        </div>
+        <div id="aquatica-list" class="ride-list"><div class="loading">Loading live times...</div></div>
     </div>
 
     <script>
+        // Verified database mapping setup using your explicit IDs
+        const parkIds = {
+            'mk': '75ea578a-adc8-4116-a54d-dccb60765ef9',    
+            'epcot': '47f90d2c-e191-4239-a466-5892ef59a88b', 
+            'hs': '288747d1-8b4f-4a64-867e-ea7c9b27bad8',    
+            'ak': '1c84a229-8862-4648-9c71-378ddd2c7693',     
+            'usf': 'eb3f4560-2383-4a36-9152-6b3e5ed6bc57',   
+            'ioa': '267615cc-8943-4c2a-ae2c-5da728ca591f',   
+            'epic': '12dbb85b-265f-44e6-bccf-f1faa17211fc',
+            'seaworld': '27d64dee-d85e-48dc-ad6d-8077445cd946',
+            'aquatica': '9e2867f8-68eb-454f-b367-0ed0fd72d72a'
+        };
+
         function switchPark(parkId) {
-            // Hide all park sections
             const sections = document.querySelectorAll('.park-section');
             sections.forEach(section => section.classList.remove('active'));
 
-            // Deactivate all navigation buttons
             const buttons = document.querySelectorAll('.nav-btn');
             buttons.forEach(btn => btn.classList.remove('active'));
 
-            // Show selected park section
             document.getElementById(parkId).classList.add('active');
-
-            // Find clicked button and mark active
-            event.currentTarget.classList.add('active');
+            document.getElementById(`btn-${parkId}`).classList.add('active');
         }
+
+        async function fetchWaitTimes() {
+            for (const [localId, wikiId] of Object.entries(parkIds)) {
+                try {
+                    const response = await fetch(`https://api.themeparks.wiki/v1/entity/${wikiId}/live`);
+                    if (!response.ok) throw new Error('API server unreachable');
+                    
+                    const data = await response.json();
+                    const rides = data.liveData.filter(item => item.entityType === "ATTRACTION");
+                    
+                    // Sort custom logic: Longest wait time down to 0, then Closed at the bottom
+                    rides.sort((a, b) => {
+                        const aOpen = a.status === "OPERATING";
+                        const bOpen = b.status === "OPERATING";
+                        
+                        // 1. Handle Closed state stratification (push closed to bottom)
+                        if (aOpen && !bOpen) return -1;
+                        if (!aOpen && bOpen) return 1;
+                        
+                        // 2. Both are open: Sort by wait times descending (longest first)
+                        if (aOpen && bOpen) {
+                            const aWait = a.queue?.STANDBY?.waitTime ?? 0;
+                            const bWait = b.queue?.STANDBY?.waitTime ?? 0;
+                            if (bWait !== aWait) {
+                                return bWait - aWait;
+                            }
+                        }
+                        
+                        // 3. Tie breaker (or both are closed): Sort alphabetically
+                        return a.name.localeCompare(b.name);
+                    });
+
+                    displayRides(localId, rides);
+                } catch (error) {
+                    console.error(`Error pulling times for ${localId}:`, error);
+                    document.getElementById(`${localId}-list`).innerHTML = '<div class="loading">Offline or waiting for data update...</div>';
+                }
+            }
+        }
+
+        function displayRides(containerId, rides) {
+            const listContainer = document.getElementById(`${containerId}-list`);
+            listContainer.innerHTML = ''; 
+
+            if (rides.length === 0) {
+                listContainer.innerHTML = '<div class="loading">No active attraction times reported.</div>';
+                return;
+            }
+
+            rides.forEach(ride => {
+                const isOpen = ride.status === "OPERATING";
+                const wait = ride.queue?.STANDBY?.waitTime ?? 0;
+                
+                let dotColor = 'dot-green';
+                let textColor = 'green';
+                
+                if (!isOpen) {
+                    dotColor = 'dot-gray';
+                    textColor = 'gray';
+                } else if (wait > 60) {
+                    dotColor = 'dot-red';
+                    textColor = 'red';
+                } else if (wait > 30) {
+                    dotColor = 'dot-yellow';
+                    textColor = 'yellow';
+                }
+
+                const displayWait = isOpen ? `${wait}m` : 'Closed';
+
+                const row = document.createElement('div');
+                row.className = 'ride-row';
+                row.innerHTML = `
+                    <span class="ride-name">${ride.name}</span>
+                    <span class="wait-time ${textColor}">
+                        <span class="status-dot ${dotColor}"></span>
+                        ${displayWait}
+                    </span>
+                `;
+                listContainer.appendChild(row);
+            });
+        }
+
+        // Run instantly on launch
+        fetchWaitTimes();
+        
+        // Auto background synchronization loop every 60 seconds
+        setInterval(fetchWaitTimes, 60000);
     </script>
 </body>
 </html>
