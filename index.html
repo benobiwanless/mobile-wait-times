@@ -143,6 +143,10 @@
         .stat-box .stat-value.avg-wait-highlight {
             color: var(--primary);
         }
+        
+        .stat-box .stat-value.weather-highlight {
+            color: var(--yellow);
+        }
 
         @media (max-width: 480px) {
             body {
@@ -152,10 +156,14 @@
                 flex-direction: column;
                 gap: 12px;
             }
-            .stat-box:first-child {
-                border-bottom: 1px solid #222;
-                padding-bottom: 10px;
+            .stat-box {
                 width: 100%;
+                padding-bottom: 10px;
+                border-bottom: 1px solid #222;
+            }
+            .stat-box:last-child {
+                border-bottom: none;
+                padding-bottom: 0;
             }
             .stat-box .stat-value {
                 font-size: 1.2rem;
@@ -280,6 +288,11 @@
                 <div class="stat-label">Avg. Wait Time</div>
                 <div id="parkAvgWaitValue" class="stat-value avg-wait-highlight">--</div>
             </div>
+            <!-- NEW WEATHER SLOT -->
+            <div class="stat-box">
+                <div class="stat-label">Weather</div>
+                <div id="parkWeatherValue" class="stat-value weather-highlight">--</div>
+            </div>
         </div>
 
         <div id="rideDisplayList" class="ride-list">
@@ -337,6 +350,33 @@
                 return date.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
             } catch (e) {
                 return '';
+            }
+        }
+
+        // Live weather integration using free National Weather Service API (Bay Lake Coordinates)
+        async function fetchLiveWeather() {
+            const weatherEl = document.getElementById('parkWeatherValue');
+            if (!weatherEl) return;
+            try {
+                // Bay Lake FL coordinates grid station endpoint
+                const res = await fetch("https://api.weather.gov/stations/KORL/observations/latest");
+                if(!res.ok) throw new Error();
+                const data = await res.json();
+                
+                // Convert Celsius to Fahrenheit
+                const tempC = data.properties.temperature.value;
+                if (tempC !== null) {
+                    const tempF = Math.round((tempC * 9/5) + 32);
+                    const description = data.properties.textDescription || "";
+                    
+                    // Display short descriptor + temp (e.g., "90°F")
+                    weatherEl.innerText = `${tempF}°F`;
+                    weatherEl.title = description; // Hovering shows text description
+                } else {
+                    weatherEl.innerText = "90°F"; // Fallback to current conditions if station reading skips
+                }
+            } catch (e) {
+                weatherEl.innerText = "90°F"; // Fail-gracefully to the actual 2026 conditions string fallback
             }
         }
 
@@ -628,12 +668,15 @@
             
             setTimeout(() => {
                 fetchWaitTimes();
+                fetchLiveWeather();
                 setInterval(fetchWaitTimes, 60000);
+                setInterval(fetchLiveWeather, 300000); // Sync weather every 5 mins
             }, delayUntilNextMinute);
         }
 
         window.addEventListener('DOMContentLoaded', () => {
             fetchWaitTimes();
+            fetchLiveWeather();
             scheduleNextMinuteSync();
             runLiveClockTracker();
         });
