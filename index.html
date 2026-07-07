@@ -105,25 +105,6 @@
             box-shadow: 0 0 15px var(--primary);
         }
 
-        .park-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 16px;
-            padding-bottom: 12px;
-            border-bottom: 2px solid #333;
-        }
-
-        .park-logo {
-            height: 55px;
-            object-fit: contain;
-        }
-
-        h2 {
-            font-size: 1.4rem;
-            font-weight: 800;
-        }
-
         /* Ride Lists */
         .ride-list {
             display: flex;
@@ -201,77 +182,43 @@
     </header>
 
     <div id="mk" class="park-section active">
-        <div class="park-header">
-            <h2>Magic Kingdom</h2>
-            <img src="MK-logo.jpg" alt="Magic Kingdom Logo" class="park-logo" onerror="this.style.display='none'">
-        </div>
         <div id="mk-list" class="ride-list"><div class="loading">Loading live times...</div></div>
     </div>
 
     <div id="epcot" class="park-section">
-        <div class="park-header">
-            <h2>EPCOT</h2>
-            <img src="Epcot-logo.jpg" alt="EPCOT Logo" class="park-logo" onerror="this.style.display='none'">
-        </div>
         <div id="epcot-list" class="ride-list"><div class="loading">Loading live times...</div></div>
     </div>
 
     <div id="hs" class="park-section">
-        <div class="park-header">
-            <h2>Hollywood Studios</h2>
-            <img src="HS-logo.jpg" alt="Hollywood Studios Logo" class="park-logo" onerror="this.style.display='none'">
-        </div>
         <div id="hs-list" class="ride-list"><div class="loading">Loading live times...</div></div>
     </div>
 
     <div id="ak" class="park-section">
-        <div class="park-header">
-            <h2>Animal Kingdom</h2>
-            <img src="AK-logo.jpg" alt="Animal Kingdom Logo" class="park-logo" onerror="this.style.display='none'">
-        </div>
         <div id="ak-list" class="ride-list"><div class="loading">Loading live times...</div></div>
     </div>
 
     <div id="usf" class="park-section">
-        <div class="park-header">
-            <h2>Universal Studios Florida</h2>
-            <img src="Universal-logo.jpg" alt="Universal Studios Logo" class="park-logo" onerror="this.style.display='none'">
-        </div>
         <div id="usf-list" class="ride-list"><div class="loading">Loading live times...</div></div>
     </div>
 
     <div id="ioa" class="park-section">
-        <div class="park-header">
-            <h2>Islands of Adventure</h2>
-            <img src="Islands-logo.jpg" alt="Islands of Adventure Logo" class="park-logo" onerror="this.style.display='none'">
-        </div>
         <div id="ioa-list" class="ride-list"><div class="loading">Loading live times...</div></div>
     </div>
 
     <div id="epic" class="park-section">
-        <div class="park-header">
-            <h2>Epic Universe</h2>
-            <img src="epic-logo.jpg" alt="Epic Universe Logo" class="park-logo" onerror="this.style.display='none'">
-        </div>
         <div id="epic-list" class="ride-list"><div class="loading">Loading live times...</div></div>
     </div>
 
     <div id="seaworld" class="park-section">
-        <div class="park-header">
-            <h2>SeaWorld Orlando</h2>
-        </div>
         <div id="seaworld-list" class="ride-list"><div class="loading">Loading live times...</div></div>
     </div>
 
     <div id="aquatica" class="park-section">
-        <div class="park-header">
-            <h2>Aquatica Orlando</h2>
-        </div>
         <div id="aquatica-list" class="ride-list"><div class="loading">Loading live times...</div></div>
     </div>
 
     <script>
-        // Database mapping matching your specific IDs
+        // Database mapping setup using explicit IDs
         const parkIds = {
             'mk': '75ea578a-adc8-4116-a54d-dccb60765ef9',    
             'epcot': '47f90d2c-e191-4239-a466-5892ef59a88b', 
